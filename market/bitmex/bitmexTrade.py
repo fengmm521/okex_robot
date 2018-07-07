@@ -13,37 +13,42 @@ import json
 
 class BitMexFuture:
 
-    def __init__(self,apiconfpth = None):
+    def __init__(self,apikey,secretkey,isTest = True):
 
-        if not apiconfpth:
-            apiconfpth = '../../../../btc/bitmex/key.txt'
-        
-        f = open(apiconfpth,'r')
-        lines = f.readlines()
-        f.close()
-
-        apikey = lines[0].replace('\r','').replace('\n','')
-        secretkey = lines[1].replace('\r','').replace('\n','')
+        self.apikey = apikey
+        self.secret = secretkey
 
         self.client = bitmex.bitmex(test=False, api_key=apikey, api_secret=secretkey)
         # https://www.bitmex.com/realtime
         # https://www.bitmex.com/api/v1
         self.baseAmount = 100
-        self.isTest = True
+        self.isTest = isTest
 
         dep = self.future_depth()
         print(dep)
 
-    def testTradeSave(self,out):
-        f = open('testtrade.txt','a')
-        outstr = out + '\n'
-        f.write(outstr)
-        f.close()
+        self.csocket = None
 
+    def setClientSocket(self,clientsocket):
+        self.csocket = clientsocket
+
+    #向数据分析客户端发送消息
+    def sendMsgToClient(self,msg):
+        try:
+            if self.csocket:
+                self.csocket.send(msg.encode())
+            else:
+                print("没有客户端连接")
+        except Exception as e:
+            print('客户端网络错误')
+
+    #收到来自数据分析客户端的下单请求
     def onTradeMsg(self,msgdict):
         #{'type':'os','amount':0,'postOnly':1}
         #{'type':'test','test':1}
         #{'type':'set','amount':100}
+        self.sendMsgToClient(str(msgdict))
+        return
 
         if msgdict['type'] == 'test':
             self.isTest = bool(msgdict['test'])
@@ -146,6 +151,11 @@ class BitMexFuture:
                     out = '(%s,getDepErro)'%(msgdict['type']) + '-' + msgjson + '-' + str(dep) 
                 self.testTradeSave(out)
 
+    def testTradeSave(self,out):
+        f = open('testtrade.txt','a')
+        outstr = out + '\n'
+        f.write(outstr)
+        f.close()
     #xbtusd期货下单
     def future_trade_xbtusd(self,price,amount,tradeType,postOnly = False):
     # bitmex的被动下单方式:

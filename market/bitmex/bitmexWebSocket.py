@@ -5,6 +5,8 @@
 import websocket
 import socket
 import sys
+import hmac
+import hashlib
 
 try:
     import thread
@@ -18,7 +20,7 @@ from future.builtins import bytes
 
 class bitmexWSTool(object):
     """docstring for wsDataTool"""
-    def __init__(self):
+    def __init__(self,apikey,secret):
         super(bitmexWSTool, self).__init__()
         self.klines = []
         self.deepdic = {}
@@ -30,18 +32,31 @@ class bitmexWSTool(object):
 
         self.isDeepInit = False
 
-        self.callbackfunc = None
+        self.csocket = None
 
-        self.apikey = None
-        self.secret = None
+        self.apikey = apikey
+        self.secret = secret
 
         self.ws = None
         self.wsurl = "wss://www.bitmex.com/realtime"
 
         self.initWebSocket()
 
-    def setCallBackFunc(self,cbfunc):
-        self.callbackfunc = cbfunc
+    def setSocketClient(self,clientsocket):
+        self.csocket = clientsocket
+
+    def reciveMsgFromClient(self,msgdic):
+        print(msgdic)
+        self.sendMsgToClient(str(msgdic))
+
+    def sendMsgToClient(self,msg):
+        try:
+            if self.csocket:
+                self.csocket.send(msg.encode())
+            else:
+                print("没有客户端连接")
+        except Exception as e:
+            print('客户端网络错误1')
 
     def getNonceTime(self):
         return int(round(time.time() * 1000))
@@ -52,17 +67,15 @@ class bitmexWSTool(object):
         return signature
 
     #用户登陆
-    def loginWebSocket(self,apikey,secret):
-        self.apikey = apikey
-        self.secret = secret
+    def loginWebSocket(self):
         ws = self.ws
         expires = self.getNonceTime()
         signature = self.generate_signature(self.apikey,self.secret,expires)
         def run(*args):
-            msg = {"op": "authKeyExpires", "args": [apikey, expires, signature]}
+            msg = {"op": "authKeyExpires", "args": [self.apikey, expires, signature]}
             jstr = json.dumps(msg)
             ws.send(jstr)
-            time.sleep(0.3) #等0.3秒登陆成功后获取个人帐户信息推送
+            time.sleep(1) #等0.3秒登陆成功后获取个人帐户信息推送
             msg = {"op": "subscribe", "args": ["execution:XBTUSD","order:XBTUSD","margin:XTBUSD","position:XTBUSD"]}
             jstr = json.dumps(msg)
             ws.send(jstr)
@@ -121,6 +134,8 @@ class bitmexWSTool(object):
             jstr = json.dumps(msg)
             ws.send(jstr)
         thread.start_new_thread(run, ())
+        time.sleep(3)
+        self.loginWebSocket()
     def initWebSocket(self):
         websocket.enableTrace(True)
         self.ws = websocket.WebSocketApp(self.wsurl,
@@ -129,14 +144,14 @@ class bitmexWSTool(object):
                                   on_close = self.on_close)
         self.ws.on_open = self.on_open
 
-    def websocketRun_forever(self):
+    def wsRunForever(self):
         self.ws.run_forever()
 
     
     def timeconvent(self,utcstrtime):
         timest = timetool.utcStrTimeToTime(utcstrtime)
         timeint = int(timest)
-        ltimeStr = timetool.timestamp2datetime(timeint,True)   
+        ltimeStr = str(timetool.timestamp2datetime(timeint,True))   
         return timeint,ltimeStr 
 
     def updateTopDeep(self,datas):

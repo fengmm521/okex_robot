@@ -5,20 +5,19 @@ import os
 import time
 import zlib
 import hashlib
-import apikeytool
 import websocket
 import json
 #okex
 #websocket只用来定阅数据推送，下单使用rest的https接口发送
 
 class okWSTool():
-    def __init__(self):
+    def __init__(self,apikey,secretkey):
         self.wsocket = 0
         self.timeDelay = int(time.time())
-        self.api_key = apikeytool.apikey
-        self.secret_key = apikeytool.secretkey
+        self.api_key = apikey
+        self.secret_key = secretkey
 
-        self.callbackfunc = None
+        self.csocket = None
 
         self.sells = {}
         self.buys = {}
@@ -45,8 +44,24 @@ class okWSTool():
         return 0
 
     #事件回调函数
-    def setCallBackFunc(self,cbfunc):
-        self.callbackfunc = cbfunc
+    def setSocketClient(self,clientsocket):
+        self.csocket = clientsocket
+
+    def sendMsgToClient(self,msg):
+        try:
+            if self.csocket:
+                self.csocket.send(msg.encode())
+            else:
+                print("没有客户端连接")
+        except Exception as e:
+            print('客户端网络错误')
+        
+
+    #收到来自数据处理的命令消息
+    def reciveCmdFromClient(self,cmd):
+        print(cmd)
+        self.sendMsgToClient(str(cmd))
+
     #有交易数据更新
     def onTrade(self,datadic):
         # [{"binary":0,"channel":"ok_sub_futureusd_trades","data":{"lever_rate":10.0,"amount":1.0,"orderid":1058866628096,"contract_id":201880010015,"fee":0.0,"contract_name":"LTC0928","unit_amount":10.0,"price_avg":0.0,"type":1,"deal_amount":0.0,"contract_type":"quarter","user_id":2051526,"system_type":0,"price":70.0,"create_date_str":"2018-07-07 00:09:37","create_date":1530893377117,"status":0}}]

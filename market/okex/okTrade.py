@@ -4,11 +4,31 @@
 from HttpMD5Util import buildMySign,httpGet,httpPost
 
 class OKFuture:
-
-    def __init__(self,url,apikey,secretkey):
+    def __init__(self,url,apikey,secretkey,isTest = True):
         self.__url = url
         self.__apikey = apikey
         self.__secretkey = secretkey
+        self.secretkey = secretkey
+        self.csocket = None
+        self.isTest = isTest
+
+    def setSocketClient(self,clientSocket):
+        self.csocket = clientSocket
+
+    #收到数据处理端的下单消息
+    def onTradeMsg(self,msgdic):
+        print(msgdic)
+        self.sendMsgToClient(str(msgdic))
+
+    #向数据处理服务器发送消息
+    def sendMsgToClient(self,msg):
+        try:
+            if self.csocket:
+                self.csocket.send(msg.encode())
+            else:
+                print("没有客户端连接")
+        except Exception as e:
+            print('客户端网络错误')
 
     #OKCOIN期货行情信息
     def future_ticker(self,symbol,contractType):

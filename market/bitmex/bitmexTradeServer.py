@@ -7,7 +7,7 @@
 #创建SocketServerTCP服务器：
 
 import os,sys
-import bitmextrade
+import bitmexTrade
 
 from sys import version_info  
 if version_info.major < 3:
@@ -18,6 +18,16 @@ else:
 import socket
 import json
 
+from magetool import pathtool
+
+nfpth = os.path.abspath(__file__)
+ndir,_ = os.path.split(nfpth)
+pdir = pathtool.GetParentPath(ndir)
+ppdir = pathtool.GetParentPath(pdir) + os.sep + 'util'
+sys.path.append(ppdir)
+import apikeytool
+import signTool
+
 myname = socket.getfqdn(socket.gethostname())
 myaddr = socket.gethostbyname(myname)
 
@@ -25,7 +35,8 @@ print('selfip:%s'%(myaddr))
 host = str(myaddr)
 
 
-port = 9102
+port = apikeytool.apikeydic['bitmex']['httpport']
+host = apikeytool.apikeydic['bitmex']['httpaddr']
 addr = (host,port)
 
 
@@ -36,9 +47,10 @@ class Servers(socketserver.StreamRequestHandler):
     def handle(self):
         global tradetool
         print('got connection from ',self.client_address)
+        tradetool.setClientSocket(self.request)
         while True:
             try:  
-                data = self.request.recv(1024)
+                data = self.request.recv(4096)
             except EOFError:  
                 print('接收客户端错误，客户端已断开连接,错误码:')
                 print(EOFError )
@@ -48,12 +60,19 @@ class Servers(socketserver.StreamRequestHandler):
                 break
             if not data: 
                 break
-
+            data = data.decode()
             print('data len:%d'%(len(data)))
             print("RECV from ", self.client_address)
             print(data)
             dicdata = json.loads(data)
-            tradetool.onTradeMsg(dicdata)
+            #来自其他服务器的数据要求验证签名
+            #数据格式:{"type":消息类型,"sign":sha256的data转为字符串的签名,"time":时间戳用来确定发送时间和验证签名,"data":{消息正文内容}}
+            #目前数据只验证签名，未作加密处理，后期加入数据加密后传送
+            #{"sign":"test3","time":123456,"data":{"a":123}}
+            if signTool.isSginOK(dicdata,tradetool.secret):
+                tradetool.onTradeMsg(dicdata)
+            else:
+                self.request.send('{"erro":"signErro"}'.encode())
 
             # self.request.send('aaa')
 
@@ -68,7 +87,10 @@ def startServer():
     
 def main():
     global tradetool
-    tradetool = bitmextrade.Future()
+    apikey = apikeytool.apikeydic['bitmex']['apikey']
+    secretkey = apikeytool.apikeydic['bitmex']['secretkey']
+    isTest =  bool(apikeytool.apikeydic['isTest'])
+    tradetool = bitmexTrade.BitMexFuture(apikey,secretkey,isTest)
 
     startServer()
 
