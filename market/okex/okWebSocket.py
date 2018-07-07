@@ -16,12 +16,17 @@ class okWSTool():
         self.timeDelay = int(time.time())
         self.api_key = apikey
         self.secret_key = secretkey
+        self.url = None
 
         self.csocket = None
+
 
         self.sells = {}
         self.buys = {}
         self.isNotInitDeep = True
+
+        self.sells5 = []
+        self.buys5 = []
 
         #账户余额
         self.btcBalance = 0.0
@@ -134,12 +139,15 @@ class okWSTool():
 
     def on_open(self,ws):
         # self.openFutureTicker()
-        self.openFutureDepth200()
+        self.openFutureDepth()
         time.sleep(0.1)
         print('open')
         self.onUserLogin()
         
-        
+    def setDeeps(self,datadic):
+        self.sells5 = datadic['asks'][::-1]
+        self.buys5 = datadic['bids']
+        print(self.buys5[0],self.sells5[0])
 
     def on_message(self,ws,data):
         # data = self.inflate(evt) #data decompress
@@ -151,6 +159,9 @@ class okWSTool():
                 sells,buys = self.getDeeps(3)
                 print(sells)
                 print(buys)
+            elif chanle == 'ok_sub_futureusd_btc_depth_quarter_5':#深度全量数据
+                # print(datadic)
+                self.setDeeps(datadic['data'])
             elif chanle == 'ok_sub_futureusd_trades':
                 #交易数据更新
                 self.onTrade(datadic)
@@ -179,19 +190,19 @@ class okWSTool():
 
     def on_close(self,ws):
         print('DISCONNECT')
+        self.initWebSocket()
 
     #设置客户端websocket
     def initWebSocket(self):
         print('xxx')
-        url = 'wss://real.okex.com:10440/websocket/okexapi'
+        self.url = 'wss://real.okex.com:10440/websocket/okexapi'
         # url = 'wss://47.90.109.236:10440/websocket/okexapi'
         websocket.enableTrace(True)
-        ws = websocket.WebSocketApp(url,
+        self.wsocket = websocket.WebSocketApp(self.url,
                                     on_message = self.on_message,
                                     on_error = self.on_error,
                                     on_close = self.on_close)
-        ws.on_open = self.on_open
-        self.wsocket = ws
+        self.wsocket.on_open = self.on_open
         # self.wsocket.run_forever()
     def wsRunForever(self):
         self.wsocket.run_forever()
@@ -217,7 +228,7 @@ class okWSTool():
     # ① X值为：btc, ltc, eth, etc, bch,eos,xrp,btg 
     # ② Y值为：this_week, next_week, quarter 
     # ③ Z值为：5, 10, 20(获取深度条数)
-    def openFutureDepth(self,X = 'btc',Y = 'quarter',Z = 3):
+    def openFutureDepth(self,X = 'btc',Y = 'quarter',Z = 5):
         channelcmd = "{'event':'addChannel','channel':'ok_sub_futureusd_%s_depth_%s_%d','binary':1}"%(X,Y,Z)
         self.wsocket.send(channelcmd);
     #订阅合约指数
