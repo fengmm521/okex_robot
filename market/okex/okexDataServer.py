@@ -68,16 +68,12 @@ class Servers(socketserver.StreamRequestHandler):
             print("RECV from ", self.client_address)
             print(data)
             dicdata = json.loads(data)
-            if signTool.isSginOK(dicdata,tradetool.secret_key):#验证客户端签名
+            if signTool.isSignOK(dicdata,tradetool.secret_key):#验证客户端签名
                 tradetool.reciveCmdFromClient(dicdata)
+            elif dicdata['type'] == 'ping':
+                self.request.send('{"type":"pong","erro":"0"}'.encode())
             else:
                 self.request.send('{"erro":"signErro"}'.encode())
-
-    def testSign(msgdic,secretkey):
-        if msgdic['sign'] == 'test':
-            return True
-        else:
-            return True
 
 def startServerThread():
     server = socketserver.ThreadingTCPServer(addr,Servers,bind_and_activate = False)

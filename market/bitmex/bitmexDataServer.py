@@ -70,8 +70,10 @@ class Servers(socketserver.StreamRequestHandler):
             #数据格式:{"type":消息类型,"sign":sha256的data转为字符串的签名,"time":时间戳用来确定发送时间和验证签名,"data":{消息正文内容}}
             #目前数据只验证签名，未作加密处理，后期加入数据加密后传送
             #{"sign":"test3","time":123456,"data":{"a":123}}
-            if signTool.isSginOK(dicdata,tradetool.secret):
+            if signTool.isSignOK(dicdata,tradetool.secret):
                 tradetool.reciveMsgFromClient(dicdata)
+            elif dicdata['type'] == 'ping':
+                self.request.send('{"type":"pong","erro":"0"}'.encode())
             else:
                 self.request.send('{"erro":"signErro"}'.encode())
 

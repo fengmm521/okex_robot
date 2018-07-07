@@ -68,20 +68,22 @@ class Servers(socketserver.StreamRequestHandler):
             print("RECV from ", self.client_address)
             print(data)
             dicdata = json.loads(data)
-            if signTool.isSginOK(dicdata,tradetool.secretkey):#验证客户端签名
+            if signTool.isSignOK(dicdata,tradetool.secretkey):#验证客户端签名
                 tradetool.onTradeMsg(dicdata)
+            elif dicdata['type'] == 'ping':
+                self.request.send('{"type":"pong","erro":"0"}'.encode())
             else:
                 self.request.send('{"erro":"signErro"}'.encode())
 
             # self.request.send('aaa')
 
 def startServer():
+    print(addr)
     server = socketserver.ThreadingTCPServer(addr,Servers,bind_and_activate = False)
     server.allow_reuse_address = True   #设置IP地址和端口可以不使用客户端连接等待，并手动绑定服务器地址和端口，手动激活服务器,要不然每一次重启服务器都会出现端口占用的问题
     server.server_bind()
     server.server_activate()
     print('server started:')
-    print(addr)
     server.serve_forever()
     
 def main():

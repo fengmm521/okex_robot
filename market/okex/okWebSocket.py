@@ -177,7 +177,7 @@ class okWSTool():
     def on_error(self,ws,evt):
         print(evt)
 
-    def on_close(self,ws,evt):
+    def on_close(self,ws):
         print('DISCONNECT')
 
     #设置客户端websocket
