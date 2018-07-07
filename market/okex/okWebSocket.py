@@ -42,6 +42,8 @@ class okWSTool():
 
         self.initWebSocket()
 
+        self.savedatas = []
+
     #获取收益率
     def getYield(self,coinType = 'btc'):
         if coinType == 'btc' and self.baseBTC > 0:
@@ -144,10 +146,22 @@ class okWSTool():
         print('open')
         self.onUserLogin()
         
+    def saveDeepList(self):
+        out = ''
+        for d in self.savedatas:
+            out += json.dumps(d) + '\n'
+        f = open('okexdeep.txt','a')
+        f.write(out)
+        f.close()
+
     def setDeeps(self,datadic):
         self.sells5 = datadic['asks'][::-1]
         self.buys5 = datadic['bids']
         print(self.buys5[0],self.sells5[0])
+        self.savedatas.append([int(time.time()),self.buys5,self.sells5])
+        if len(self.savedatas) >= 1000:
+            self.saveDeepList()
+            self.savedatas = []
 
     def on_message(self,ws,data):
         # data = self.inflate(evt) #data decompress

@@ -42,6 +42,8 @@ class bitmexWSTool(object):
 
         self.initWebSocket()
 
+        self.savedatas = []
+
     def setSocketClient(self,clientsocket):
         self.csocket = clientsocket
 
@@ -154,12 +156,24 @@ class bitmexWSTool(object):
         ltimeStr = str(timetool.timestamp2datetime(timeint,True))   
         return timeint,ltimeStr 
 
+    def saveDeepList(self):
+        out = ''
+        for d in self.savedatas:
+            out += json.dumps(d) + '\n'
+        f = open('bitmexdeep.txt','a')
+        f.write(out)
+        f.close()
+
     def updateTopDeep(self,datas):
         if len(datas) > 0:
             timeint,timestr = self.timeconvent(datas[-1]['timestamp'])
             self.selltop = [datas[-1]['askPrice'],datas[-1]['askSize'],timeint,timestr]
             self.buytop = [datas[-1]['bidPrice'],datas[-1]['bidSize'],timeint,timestr]
             print(self.selltop,self.buytop)
+            self.savedatas.append([int(time.time()),self.buytop,self.selltop])
+            if len(self.savedatas) >= 1000:
+                self.saveDeepList()
+                self.savedatas = []
         else:
             print('数据错误')
 
