@@ -3,7 +3,7 @@
 #用于访问OKCOIN 期货REST API
 from HttpMD5Util import buildMySign,httpGet,httpPost
 
-class OKCoinFuture:
+class OKFuture:
 
     def __init__(self,url,apikey,secretkey):
         self.__url = url

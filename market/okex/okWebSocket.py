@@ -11,7 +11,7 @@ import json
 #okex
 #websocket只用来定阅数据推送，下单使用rest的https接口发送
 
-class OKFutureWSClient():
+class okWSTool():
     def __init__(self):
         self.wsocket = 0
         self.timeDelay = int(time.time())
@@ -57,6 +57,7 @@ class OKFutureWSClient():
         #[{"binary":0,"channel":"ok_sub_futureusd_positions","data":{"symbol":"ltc_usd","user_id":2051526,"positions":[{"bondfreez":0.01428571,"margin":0.0,"avgprice":82.005,"eveningup":0.0,"contract_id":201809280015,"hold_amount":0.0,"contract_name":"LTC0928","realized":0.0,"position":1,"costprice":73.499,"position_id":938193331968},{"bondfreez":0.01428571,"margin":0.0,"avgprice":0.0,"eveningup":0.0,"contract_id":201809210015,"hold_amount":0.0,"contract_name":"LTC0928","realized":0.0,"position":2,"costprice":0.0,"position_id":938195331968}]}}]
         print(datadic)
 
+    #用户帐户信息更新
     def onUserInfoChange(self,datadic):
         # [{"binary":0,"channel":"ok_sub_futureusd_userinfo","data":{"symbol":"ltc_usd","balance":0.08094866,"unit_amount":10.0,"profit_real":0.0,"keep_deposit":0.01428571}}]
         print(datadic)
