@@ -84,19 +84,25 @@ def startServerThread():
     print(addr)
     server.serve_forever()
     
+def startDataServer():
+    global tradetool
+    apikey = apikeytool.apikeydic['okex']['apikey']
+    secretkey = apikeytool.apikeydic['okex']['secretkey']
+    tradetool = okWebSocket.okWSTool(apikey,secretkey)
+    tradetool.wsRunForever()
 def start_server():
+    thr2= threading.Thread(target=startDataServer,args=())
+    thr2.setDaemon(True)
+    thr2.start()
     thr = threading.Thread(target=startServerThread,args=())
     thr.setDaemon(True)
     thr.start()
 
 def main():
     
-    global tradetool
-    apikey = apikeytool.apikeydic['okex']['apikey']
-    secretkey = apikeytool.apikeydic['okex']['secretkey']
-    tradetool = okWebSocket.okWSTool(apikey,secretkey)
     start_server()
-    tradetool.wsRunForever()
+    while True:
+        pass
 
 #测试
 if __name__ == '__main__':

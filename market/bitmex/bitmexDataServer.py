@@ -87,20 +87,27 @@ def startServerThread():
     print('server started:')
     print(addr)
     server.serve_forever()
-    
+
+def startDataThread()
+    global tradetool
+    apikey = apikeytool.apikeydic['bitmex']['apikey']
+    secretkey = apikeytool.apikeydic['bitmex']['secretkey']
+    tradetool = bitmexWebSocket.bitmexWSTool(apikey,secretkey)
+    tradetool.wsRunForever()
+
 def start_server():
+    thr2 = threading.Thread(target=startDataThread,args=())
+    thr2.setDaemon(True)
+    thr2.start()
     thr = threading.Thread(target=startServerThread,args=())
     thr.setDaemon(True)
     thr.start()
 
 def main():
-    global tradetool
-    apikey = apikeytool.apikeydic['bitmex']['apikey']
-    secretkey = apikeytool.apikeydic['bitmex']['secretkey']
-    tradetool = bitmexWebSocket.bitmexWSTool(apikey,secretkey)
     
     start_server()
-    tradetool.wsRunForever()
+    while True:
+        pass
 
 #测试
 if __name__ == '__main__':

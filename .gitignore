@@ -2,3 +2,5 @@
 *.pyc
 market/okex/okexdeep.txt
 market/bitmex/bitmexdeep.txt
+market/okexdeep.txt
+market/bitmexdeep.txt
