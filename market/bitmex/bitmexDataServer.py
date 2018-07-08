@@ -89,7 +89,7 @@ def startServerThread():
     print(addr)
     server.serve_forever()
 
-def startDataThread()
+def startDataThread():
     global tradetool
     apikey = apikeytool.apikeydic['bitmex']['apikey']
     secretkey = apikeytool.apikeydic['bitmex']['secretkey']
