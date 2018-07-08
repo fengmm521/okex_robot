@@ -100,6 +100,7 @@ class bitmexWSTool(object):
             print(message)
         ptime = int(time.time())
         if ptime - self.lastPingTime >= 300:
+            self.lastPingTime = ptime
             self.ws.send('ping'.encode())
 
     def on_error(self,ws, error):
