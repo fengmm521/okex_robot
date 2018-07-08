@@ -90,11 +90,14 @@ class bitmexWSTool(object):
         thread.start_new_thread(run, ())
 
     def on_message(self,ws, message):
-        print('-----getMsg------')
+        # print('-----getMsg------')
         # print(message)
-        # print(type(message))
+                # print(type(message))
         # msg = str(message)
-        self.onMessage(message)
+        if message.decode() != 'pong':
+            self.onMessage(message)
+        else:
+            print(message)
         ptime = int(time.time())
         if ptime - self.lastPingTime >= 300:
             self.ws.send('ping'.encode())
