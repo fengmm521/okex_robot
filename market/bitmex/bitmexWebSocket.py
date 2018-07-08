@@ -40,9 +40,14 @@ class bitmexWSTool(object):
         self.ws = None
         self.wsurl = "wss://www.bitmex.com/realtime"
 
+        self.savedatas = []
+
+        self.isWSOpen = False
+        self.lastPingTime = int(time.time())
+
         self.initWebSocket()
 
-        self.savedatas = []
+        
 
     def setSocketClient(self,clientsocket):
         self.csocket = clientsocket
@@ -52,14 +57,15 @@ class bitmexWSTool(object):
         self.sendMsgToClient(str(msgdic))
 
     def sendMsgToClient(self,msg):
-        try:
-            if self.csocket:
-                self.csocket.send(msg.encode())
-            else:
-                print("没有客户端连接")
-        except Exception as e:
-            print('客户端网络错误1')
-
+        def run(*args):
+            try:
+                if self.csocket:
+                    self.csocket.send(msg.encode())
+                else:
+                    print("没有客户端连接")
+            except Exception as e:
+                print('客户端网络错误1')
+        thread.start_new_thread(run, ())
     def getNonceTime(self):
         return int(round(time.time() * 1000))
 
@@ -89,15 +95,25 @@ class bitmexWSTool(object):
         # print(type(message))
         # msg = str(message)
         self.onMessage(message)
+        ptime = int(time.time())
+        if ptime - self.lastPingTime >= 300:
+            self.ws.send('ping'.encode())
 
     def on_error(self,ws, error):
         print('-----eoor------')
         print(error)
 
     def on_close(self,ws):
+        self.isWSOpen = False
         print("### closed ###")
+        time.sleep(10)
+        while not self.isWSOpen:
+            time.sleep(1)
+            self.initWebSocket()
+            time.sleep(5)
 
     def on_open(self,ws):
+        self.isWSOpen = True
         def run(*args):
             #订阅主题是无需身份验证:
             # "announcement",// 网站公告
@@ -147,6 +163,7 @@ class bitmexWSTool(object):
         self.ws.on_open = self.on_open
 
     def wsRunForever(self):
+        # self.ws.run_forever(ping_interval=70, ping_timeout=10)
         self.ws.run_forever()
 
     
@@ -171,7 +188,7 @@ class bitmexWSTool(object):
             self.buytop = [datas[-1]['bidPrice'],datas[-1]['bidSize'],timeint,timestr]
             print(self.selltop,self.buytop)
             self.savedatas.append([int(time.time()),self.buytop,self.selltop])
-            if len(self.savedatas) >= 1000:
+            if len(self.savedatas) >= 100:
                 self.saveDeepList()
                 self.savedatas = []
         else:

@@ -7,6 +7,7 @@ import zlib
 import hashlib
 import websocket
 import json
+import thread
 #okex
 #websocket只用来定阅数据推送，下单使用rest的https接口发送
 
@@ -40,9 +41,16 @@ class okWSTool():
         self.baseEOS = 0.0
         self.baseETH = 0.0
 
+        self.savedatas = []
+
+        self.msgBuffer = []
+        self.isWSOpen = False
+
+        self.lastPingTime = int(time.time())
+
         self.initWebSocket()
 
-        self.savedatas = []
+        
 
     #获取收益率
     def getYield(self,coinType = 'btc'):
@@ -55,15 +63,16 @@ class okWSTool():
         self.csocket = clientsocket
 
     def sendMsgToClient(self,msg):
-        try:
-            if self.csocket:
-                self.csocket.send(msg.encode())
-            else:
-                print("没有客户端连接")
-        except Exception as e:
-            print('客户端网络错误')
+        def run(*args):
+            try:
+                if self.csocket:
+                    self.csocket.send(msg.encode())
+                else:
+                    print("没有客户端连接")
+            except Exception as e:
+                print('客户端网络错误')
+        thread.start_new_thread(run, ())
         
-
     #收到来自数据处理的命令消息
     def reciveCmdFromClient(self,cmd):
         print(cmd)
@@ -140,6 +149,7 @@ class okWSTool():
         return sellouts,buyouts
 
     def on_open(self,ws):
+        self.isWSOpen = True
         # self.openFutureTicker()
         self.openFutureDepth()
         time.sleep(0.1)
@@ -159,7 +169,7 @@ class okWSTool():
         self.buys5 = datadic['bids']
         print(self.buys5[0],self.sells5[0])
         self.savedatas.append([int(time.time()),self.buys5,self.sells5])
-        if len(self.savedatas) >= 1000:
+        if len(self.savedatas) >= 100:
             self.saveDeepList()
             self.savedatas = []
 
@@ -188,7 +198,10 @@ class okWSTool():
         except Exception as e:
             print('-'*20)
             print(data)
-        
+        ptime = int(time.time())
+        if ptime - self.lastPingTime >= 30:
+            self.lastPingTime = ptime
+            self.pingServer()
 
     #有加密时的解密    
     def inflate(self,data):
@@ -203,8 +216,13 @@ class okWSTool():
         print(evt)
 
     def on_close(self,ws):
+        self.isWSOpen = False
+        time.sleep(10)
         print('DISCONNECT')
-        self.initWebSocket()
+        while not self.isWSOpen:
+            time.sleep(10)
+            self.initWebSocket()
+            time.sleep(5)
 
     #设置客户端websocket
     def initWebSocket(self):

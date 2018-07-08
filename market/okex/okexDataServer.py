@@ -90,12 +90,12 @@ def start_server():
     thr.start()
 
 def main():
+    
     global tradetool
     apikey = apikeytool.apikeydic['okex']['apikey']
     secretkey = apikeytool.apikeydic['okex']['secretkey']
     tradetool = okWebSocket.okWSTool(apikey,secretkey)
     start_server()
-
     tradetool.wsRunForever()
 
 #测试
