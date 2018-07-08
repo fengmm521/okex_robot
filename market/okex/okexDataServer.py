@@ -8,6 +8,7 @@
 import os,sys
 import okWebSocket
 import threading
+import time
 
 from sys import version_info  
 if version_info.major < 3:
@@ -102,7 +103,7 @@ def main():
     
     start_server()
     while True:
-        pass
+        time.sleep(60)
 
 #测试
 if __name__ == '__main__':
