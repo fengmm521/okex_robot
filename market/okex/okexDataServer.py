@@ -99,8 +99,12 @@ def start_server():
     thr.setDaemon(True)
     thr.start()
 
+def removeLogFile():
+    if os.path.exists('okexdeep.txt'):
+        os.remove('okexdeep.txt')
+
 def main():
-    
+    removeLogFile()
     start_server()
     while True:
         time.sleep(60)

@@ -104,8 +104,12 @@ def start_server():
     thr.setDaemon(True)
     thr.start()
 
+def removeLogFile():
+    if os.path.exists('bitmexdeep.txt'):
+        os.remove('bitmexdeep.txt')
+
 def main():
-    
+    removeLogFile()
     start_server()
     while True:
         time.sleep(60)
