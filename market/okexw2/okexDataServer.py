@@ -34,8 +34,8 @@ myaddr = socket.gethostbyname(myname)
 print('selfip:%s'%(myaddr))
 host = str(myaddr)
 
-port = apikeytool.apikeydic['okex']['wsport']
-host = apikeytool.apikeydic['okex']['wsaddr']
+port = apikeytool.apikeydic['okexw2']['wsport']
+host = apikeytool.apikeydic['okexw2']['wsaddr']
 addr = (host,port)
 
 
@@ -87,8 +87,8 @@ def startServerThread():
     
 def startDataServer():
     global tradetool
-    apikey = apikeytool.apikeydic['okex']['apikey']
-    secretkey = apikeytool.apikeydic['okex']['secretkey']
+    apikey = apikeytool.apikeydic['okexw2']['apikey']
+    secretkey = apikeytool.apikeydic['okexw2']['secretkey']
     tradetool = okWebSocket.okWSTool(apikey,secretkey)
     tradetool.setObjName('okexw2')
     tradetool.wsRunForever()

@@ -34,8 +34,8 @@ print('selfip:%s'%(myaddr))
 host = str(myaddr)
 
 
-port = apikeytool.apikeydic['okex']['httpport']
-host = apikeytool.apikeydic['okex']['httpaddr']
+port = apikeytool.apikeydic['okexw2']['httpport']
+host = apikeytool.apikeydic['okexw2']['httpaddr']
 addr = (host,port)
 
 
@@ -88,9 +88,9 @@ def startServer():
     
 def main():
     global tradetool
-    url = apikeytool.apikeydic['okex']['url']
-    apikey = apikeytool.apikeydic['okex']['apikey']
-    secretkey = apikeytool.apikeydic['okex']['secretkey']
+    url = apikeytool.apikeydic['okexw2']['url']
+    apikey = apikeytool.apikeydic['okexw2']['apikey']
+    secretkey = apikeytool.apikeydic['okexw2']['secretkey']
     isTest =  bool(apikeytool.apikeydic['isTest'])
     tradetool = okTrade.OKFuture(url, apikey, secretkey,isTest)
     tradetool.setObjName('okexw2')
