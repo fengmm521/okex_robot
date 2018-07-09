@@ -53,7 +53,7 @@ class okWSTool():
         self.initWebSocket()
 
     
-    self.setObjName(self,pname):
+    def setObjName(self,pname):
         self.objname = pname
 
     #获取收益率

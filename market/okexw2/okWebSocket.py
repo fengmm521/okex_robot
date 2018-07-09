@@ -52,7 +52,7 @@ class okWSTool():
 
         self.initWebSocket()
 
-    self.setObjName(self,pname):
+    def setObjName(self,pname):
         self.objname = pname
         
     #获取收益率
@@ -244,26 +244,26 @@ class okWSTool():
     #期货收报机数据
     # ① X值为：btc, ltc, eth, etc, bch,eos,xrp,btg 
     # ② Y值为：this_week, next_week, quarter
-    def openFutureTicker(self,X = 'btc',Y = 'quarter'):#默认使用季合约#ok_sub_futureusd_X_ticker_Y
+    def openFutureTicker(self,X = 'btc',Y = 'next_week'):#默认使用季合约#ok_sub_futureusd_X_ticker_Y
         chanelcmd = "{'event':'addChannel','channel':'ok_sub_futureusd_%s_ticker_%s'}"%(X,Y)
         self.wsocket.send(chanelcmd)
     #期货成交数据推送
     # ① X值为：btc, ltc, eth, etc, bch,eos,xrp,btg 
     # ② Y值为：this_week, next_week, quarter
-    def openFutureData(self,X = 'btc',Y = 'quarter'):#默使用季合约成交数据
+    def openFutureData(self,X = 'btc',Y = 'next_week'):#默使用季合约成交数据
         chanelcmd = "{'event':'addChannel','channel':'ok_sub_futureusd_%s_trade_%s'}"%(X,Y)
         self.wsocket.send(chanelcmd)
     #期货200深度增量数据推送,
     # ① X值为：btc, ltc, eth, etc, bch,eos,xrp,btg 
     # ② Y值为：this_week, next_week, quarter
-    def openFutureDepth200(self,X = 'btc',Y = 'quarter'):
+    def openFutureDepth200(self,X = 'btc',Y = 'next_week'):
         channelcmd = "{'event':'addChannel','channel':'ok_sub_futureusd_%s_depth_%s'}"%(X,Y)
         self.wsocket.send(channelcmd);
     #期货完全深度数据推送,
     # ① X值为：btc, ltc, eth, etc, bch,eos,xrp,btg 
     # ② Y值为：this_week, next_week, quarter 
     # ③ Z值为：5, 10, 20(获取深度条数)
-    def openFutureDepth(self,X = 'btc',Y = 'quarter',Z = 5):
+    def openFutureDepth(self,X = 'btc',Y = 'next_week',Z = 5):
         channelcmd = "{'event':'addChannel','channel':'ok_sub_futureusd_%s_depth_%s_%d','binary':1}"%(X,Y,Z)
         self.wsocket.send(channelcmd);
     #订阅合约指数

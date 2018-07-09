@@ -12,7 +12,7 @@ class OKFuture:
         self.csocket = None
         self.isTest = isTest
         self.objname = 'okex'
-    self.setObjName(self,pname):
+    def setObjName(self,pname):
         self.objname = pname
 
     def setSocketClient(self,clientSocket):

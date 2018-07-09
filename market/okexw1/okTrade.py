@@ -13,7 +13,7 @@ class OKFuture:
         self.isTest = isTest
         self.objname = 'okexw1'
         
-    self.setObjName(self,pname):
+    def setObjName(self,pname):
         self.objname = pname
 
     def setSocketClient(self,clientSocket):
