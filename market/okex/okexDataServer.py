@@ -90,6 +90,7 @@ def startDataServer():
     apikey = apikeytool.apikeydic['okex']['apikey']
     secretkey = apikeytool.apikeydic['okex']['secretkey']
     tradetool = okWebSocket.okWSTool(apikey,secretkey)
+    tradetool.setObjName('okex')
     tradetool.wsRunForever()
 def start_server():
     thr2= threading.Thread(target=startDataServer,args=())

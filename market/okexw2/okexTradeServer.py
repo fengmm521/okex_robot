@@ -93,7 +93,7 @@ def main():
     secretkey = apikeytool.apikeydic['okex']['secretkey']
     isTest =  bool(apikeytool.apikeydic['isTest'])
     tradetool = okTrade.OKFuture(url, apikey, secretkey,isTest)
-    tradetool.setObjName('okex')
+    tradetool.setObjName('okexw2')
     startServer()
 
 #测试

@@ -48,14 +48,13 @@ class okWSTool():
 
         self.lastPingTime = int(time.time())
 
-        self.objname = 'okex'
+        self.objname = 'okexw2'
 
         self.initWebSocket()
 
-    
     self.setObjName(self,pname):
         self.objname = pname
-
+        
     #获取收益率
     def getYield(self,coinType = 'btc'):
         if coinType == 'btc' and self.baseBTC > 0:
@@ -182,12 +181,12 @@ class okWSTool():
         try:
             datadic = json.loads(data)[0]
             chanle = datadic['channel']
-            if chanle == 'ok_sub_futureusd_btc_depth_quarter': #深度增量更新数据
+            if chanle == 'ok_sub_futureusd_btc_depth_next_week': #深度增量更新数据
                 self.updateDeep(datadic['data'])
                 sells,buys = self.getDeeps(3)
                 print(sells)
                 print(buys)
-            elif chanle == 'ok_sub_futureusd_btc_depth_quarter_5':#深度全量数据
+            elif chanle == 'ok_sub_futureusd_btc_depth_next_week_5':#深度全量数据
                 # print(datadic)
                 self.setDeeps(datadic['data'])
             elif chanle == 'ok_sub_futureusd_trades':

@@ -11,7 +11,8 @@ class OKFuture:
         self.secretkey = secretkey
         self.csocket = None
         self.isTest = isTest
-        self.objname = 'okex'
+        self.objname = 'okexw1'
+        
     self.setObjName(self,pname):
         self.objname = pname
 
