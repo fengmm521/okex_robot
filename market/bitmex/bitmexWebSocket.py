@@ -190,7 +190,7 @@ class bitmexWSTool(object):
             timeint,timestr = self.timeconvent(datas[-1]['timestamp'])
             self.selltop = [datas[-1]['askPrice'],datas[-1]['askSize'],timeint,timestr]
             self.buytop = [datas[-1]['bidPrice'],datas[-1]['bidSize'],timeint,timestr]
-            print(self.selltop,self.buytop)
+            print(self.buytop,self.selltop)
             self.savedatas.append([int(time.time()),self.buytop,self.selltop])
             if len(self.savedatas) >= 100:
                 self.saveDeepList()
