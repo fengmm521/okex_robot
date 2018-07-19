@@ -201,6 +201,7 @@ class bitmexWSTool(object):
     def onMessage(self,msg):                #收到新的推送数据
         datdic = json.loads(msg)
         if 'table' in datdic:
+            self.sendMsgToClient(msg)
             if datdic['table'] == 'tradeBin1m': #得到1分钟k线相关数据
                 self.onKlineMessage(datdic)
             elif datdic['table'] == 'orderBookL2':

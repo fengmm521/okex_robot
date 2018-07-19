@@ -180,6 +180,7 @@ class okWSTool():
     def on_message(self,ws,data):
         # data = self.inflate(evt) #data decompress
         try:
+            self.sendMsgToClient(data)
             datadic = json.loads(data)[0]
             chanle = datadic['channel']
             if chanle == 'ok_sub_futureusd_btc_depth_quarter': #深度增量更新数据
