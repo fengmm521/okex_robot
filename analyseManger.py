@@ -10,6 +10,7 @@ import time
 import json
 
 from magetool import pathtool
+from magetool import timetool
 sys.path.append('util')
 import signTool
 
@@ -62,6 +63,9 @@ class TradeTool(object):
         
         self.socketstate = {'bd':False,'bt':False,'od':False,'ot':False}
 
+        ptime = int(time.time())
+        self.lastimedic = {'bd':ptime,'bt':ptime,'od':ptime,'ot':ptime}
+
         self.initSocket()
 
         
@@ -79,7 +83,7 @@ class TradeTool(object):
             print('okex http trade server connected!')
             def okexTradeRun():
                 while True:
-                    data = self.okexTradeSocket.recv(4096)
+                    data = self.okexTradeSocket.recv(100*1024)
                     datadic = json.loads(data.decode())
                     self.onOkexTradeBack(datadic)
             self.okexTradethr = threading.Thread(target=okexTradeRun,args=())
@@ -97,7 +101,7 @@ class TradeTool(object):
             print('okex ws data server connected!')
             def okexDataRun():
                 while True:
-                    data = self.okexDataSocket.recv(4096)
+                    data = self.okexDataSocket.recv(100*1024)
                     datadic = json.loads(data.decode())
                     self.onOkexData(datadic)
             self.okexDatathr = threading.Thread(target=okexDataRun,args=())
@@ -115,7 +119,7 @@ class TradeTool(object):
             print('bitmex ws Trade server connected!')
             def okexDataRun():
                 while True:
-                    data = self.bitmexTradeSocket.recv(4096)
+                    data = self.bitmexTradeSocket.recv(100*1024)
                     datadic = json.loads(data.decode())
                     self.onBitmexTradeBack(datadic)
             self.bitmexTradethr = threading.Thread(target=okexDataRun,args=())
@@ -133,9 +137,14 @@ class TradeTool(object):
             print('bitmex ws data server connected!')
             def bitmexDataRun():
                 while True:
-                    data = self.bitmexDataSocket.recv(4096)
-                    datadic = json.loads(data.decode())
-                    self.onBitmexData(datadic)
+                    data = self.bitmexDataSocket.recv(100*1024)
+                    try:
+                        datadic = json.loads(data.decode())
+                        self.onBitmexData(datadic)
+                    except Exception as e:
+                        print('-------erro bitmex data -------')
+                        print(data)
+                    
             self.bitmexDatathr = threading.Thread(target=bitmexDataRun,args=())
             self.bitmexDatathr.setDaemon(True)
             self.bitmexDatathr.start()
@@ -145,35 +154,58 @@ class TradeTool(object):
             self.bitmexDataSocket = None
             isErro =  True
         return (not isErro)
+
+    def timeconvent(self,utcstrtime):
+        timest = timetool.utcStrTimeToTime(utcstrtime)
+        timeint = int(timest)
+        ltimeStr = str(timetool.timestamp2datetime(timeint,True))   
+        return timeint,ltimeStr 
     #收到数据
     #okex数据
     def onOkexData(self,datadic):
-        if datadic['type'] == 'pong':
+        if 'type' in datadic and datadic['type'] == 'pong':
             self.socketstate['od'] = True
             print('pong from okex ws data server...')
+        elif type(datadic) == list and 'channel' in datadic[0] and datadic[0]['channel'] == 'ok_sub_futureusd_btc_depth_quarter_5':
+            # print(datadic)
+            data = datadic[0]['data']
+            self.sells5 = data['asks'][::-1]
+            self.buys5 = data['bids']
+            print(self.buys5[0],self.sells5[0])
         else:
             print(datadic)
+        self.lastimedic['od'] = int(time.time())
     #交易下单返回状态
     def onOkexTradeBack(self,datadic):
-        if datadic['type'] == 'pong':
+        if 'type' in datadic and datadic['type'] == 'pong':
             self.socketstate['ot'] = True
             print('pong from okex trade http server...')
         else:
             print(datadic)
+        self.lastimedic['ot'] = int(time.time())
 
     #bitmex数据
     def onBitmexData(self,datadic):
-        if datadic['type'] == 'pong':
+        if 'type' in datadic and datadic['type'] == 'pong':
             self.socketstate['bd'] = True
             print('pong from bitmex ws data server...')
+        elif 'table' in datadic and datadic['table'] == 'quote':
+            datas = datadic['data']
+            timeint,timestr = self.timeconvent(datas[-1]['timestamp'])
+            self.selltop = [datas[-1]['askPrice'],datas[-1]['askSize'],timeint,timestr]
+            self.buytop = [datas[-1]['bidPrice'],datas[-1]['bidSize'],timeint,timestr]
+            print(self.buytop,self.selltop)
         else:
             print(datadic)
+        self.lastimedic['bd'] = int(time.time())
     def onBitmexTradeBack(self,datadic):
-        if datadic['type'] == 'pong':
+        if 'type' in datadic and datadic['type'] == 'pong':
             self.socketstate['bt'] = True
             print('pong from bitmex trade http server...')
         else:
             print(datadic)
+
+        self.lastimedic['bt'] = int(time.time())
 
     #更新交易状态
     def updateTradeState(self):
@@ -251,13 +283,22 @@ class TradeTool(object):
         except Exception as e:
             print('服务器端okexDataSocket网络错误1')
     
-    def pingAllServer(self):
+    #当有客户端30秒没有接收到数据时就发送ping
+    def pingAllServer(self,ptimeDelay = 30):
+        ptime = int(time.time())
         for k in self.socketstate.keys():
-            self.socketstate[k] = False
-        self.sendMsgToBitmexData('ping','ping',isSigned = True)
-        self.sendMsgToBitmexTrade('ping','ping',isSigned = True)
-        self.sendMsgToOkexData('ping','ping',isSigned = True)
-        self.sendMsgToOkexTrade('ping','ping',isSigned = True)
+            if ptime - self.lastimedic[k] > ptimeDelay:
+                self.socketstate[k] = False
+            else:
+                self.socketstate[k] = True
+        if not self.socketstate['bd']:
+            self.sendMsgToBitmexData('ping','ping',isSigned = True)
+        if not self.socketstate['bt']:
+            self.sendMsgToBitmexTrade('ping','ping',isSigned = True)
+        if not self.socketstate['od']:
+            self.sendMsgToOkexData('ping','ping',isSigned = True)
+        if not self.socketstate['ot']:
+            self.sendMsgToOkexTrade('ping','ping',isSigned = True)
     def printSet(self):
         print 'isTest:',self.isTest
         print 'amount:',self.amount

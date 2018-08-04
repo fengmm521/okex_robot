@@ -18,7 +18,7 @@ def main():
     tradetool = analyseManger.TradeTool(apikeytool.apikeydic)
 
     while True:
-        time.sleep(3)
+        time.sleep(10)
         tradetool.pingAllServer()
         pass
 
