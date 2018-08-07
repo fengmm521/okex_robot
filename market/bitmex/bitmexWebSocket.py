@@ -47,6 +47,8 @@ class bitmexWSTool(object):
 
         self.initWebSocket()
 
+        self.sendcount = 100   #每100次log提示一次没有客户端连接
+
         
 
     def setSocketClient(self,clientsocket):
@@ -62,7 +64,10 @@ class bitmexWSTool(object):
                 if self.csocket:
                     self.csocket.send(msg.encode())
                 else:
-                    print("没有客户端连接")
+                    self.sendcount -= 1
+                    if self.sendcount < 0:
+                        self.sendcount = 100
+                        print("没有客户端连接")
             except Exception as e:
                 print('客户端网络错误1')
         thread.start_new_thread(run, ())
