@@ -7,18 +7,27 @@
 #创建SocketServerTCP服务器：
 
 import os,sys
+from sys import version_info  
+
+if version_info.major < 3:
+    import SocketServer as socketserver
+    magetoolpth = '/usr/local/lib/python2.7/site-packages'
+    if magetoolpth not in sys.path:
+        sys.path.append(magetoolpth)
+    else:
+        print('heave magetool pth')
+else:
+    import socketserver
+
 import bitmexWebSocket
 import threading
 import time
 
-from sys import version_info  
-if version_info.major < 3:
-    import SocketServer as socketserver
-else:
-    import socketserver
 
 import socket
 import json
+
+
 
 from magetool import pathtool
 
