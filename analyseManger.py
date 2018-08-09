@@ -68,7 +68,9 @@ class TradeTool(object):
 
         self.initSocket()
 
-        
+        self.okexDatas = []             #买一价，卖一价，接收数据时间
+        self.bitmexDatas = []           #买一价，卖一价, 接收数据时间
+        self.lastSub = {}               #okex的卖一价和bitmex的买一价的差价，bitmex的卖一价和okex的买一价的差价,时间差,最后接收时间
 
     #初始化交易参数,如单次下单合约值，谁主动成交，谁被动成交,交易手续费等
     def initTraddeConfig(self):
@@ -160,7 +162,20 @@ class TradeTool(object):
         timeint = int(timest)
         ltimeStr = str(timetool.timestamp2datetime(timeint,True))   
         return timeint,ltimeStr 
-    #收到数据
+
+    def updateDataSub(self):
+        #self.okexDatas = []             #买一价，卖一价，接收数据时间
+        #self.bitmexDatas = []           #买一价，卖一价, 接收数据时间
+        #self.lastSub = []               #okex的卖一价和bitmex的买一价的差价，bitmex的卖一价和okex的买一价的差价,时间差,最后接收时间
+        if self.okexDatas and self.bitmexDatas:
+            self.lastSub['ob'] = {'subOB':self.okexDatas[1][0] - self.bitmexDatas[0][0],'odeep':self.okexDatas[1][1],'bdeep':self.bitmexDatas[0][1]}
+            self.lastSub['bo'] = {'subBO':self.bitmexDatas[1][0] - self.okexDatas[0][0],'odeep':self.okexDatas[0][1],'bdeep':self.bitmexDatas[1][1]}
+            self.lastSub['otime'] = self.okexDatas[2]
+            self.lastSub['btime'] = self.bitmexDatas[2]
+            self.lastSub['subtime'] = self.okexDatas[2] - self.bitmexDatas[2]
+            # print('-'*20)
+            print('ob:',round(self.lastSub['ob']['subOB'],3),self.lastSub['ob']['odeep'],self.lastSub['ob']['bdeep'],'bo:',round(self.lastSub['bo']['subBO'],3),self.lastSub['bo']['odeep'],self.lastSub['bo']['bdeep'],self.lastSub['subtime'])
+    #收到数据   
     #okex数据
     def onOkexData(self,datadic):
         if 'type' in datadic and datadic['type'] == 'pong':
@@ -171,7 +186,9 @@ class TradeTool(object):
             data = datadic[0]['data']
             self.sells5 = data['asks'][::-1]
             self.buys5 = data['bids']
-            print(self.buys5[0],self.sells5[0])
+            self.okexDatas = [self.buys5[0],self.sells5[0],int(time.time())]             #买一价，卖一价，接收数据时间
+            self.updateDataSub()
+            # print(self.buys5[0],self.sells5[0])
         else:
             print(datadic)
         self.lastimedic['od'] = int(time.time())
@@ -194,7 +211,9 @@ class TradeTool(object):
             timeint,timestr = self.timeconvent(datas[-1]['timestamp'])
             self.selltop = [datas[-1]['askPrice'],datas[-1]['askSize'],timeint,timestr]
             self.buytop = [datas[-1]['bidPrice'],datas[-1]['bidSize'],timeint,timestr]
-            print(self.buytop,self.selltop)
+            self.bitmexDatas = [self.buytop,self.selltop,self.buytop[2]]           #买一价，卖一价, 接收数据时间
+            self.updateDataSub()
+            # print(self.buytop,self.selltop)
         else:
             print(datadic)
         self.lastimedic['bd'] = int(time.time())
