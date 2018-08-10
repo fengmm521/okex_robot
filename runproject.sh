@@ -47,5 +47,7 @@ osascript -e 'tell app "Terminal"
     do script "cd ~/Documents/github/okex_robot/market/okex;sh startTradeServer.sh"
 end tell'
 
+sleep 5
+
 #启动管理客户端
 python mainClient.py
