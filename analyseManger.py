@@ -4,6 +4,15 @@
 #客户端调用，用于查看API返回结果
 
 import os,sys
+from sys import version_info  
+
+if version_info.major < 3:
+    magetoolpth = '/usr/local/lib/python2.7/site-packages'
+    if magetoolpth not in sys.path:
+        sys.path.append(magetoolpth)
+    else:
+        print('heave magetool pth')
+
 import socket
 import threading
 import time
