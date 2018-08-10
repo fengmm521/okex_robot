@@ -21,31 +21,8 @@ echo $DATE
 cd $basepath
 
 #打开bitmex合约工具
+#!/usr/bin/env bash
+
 osascript -e 'tell app "Terminal"
     do script "cd ~/Documents/github/okex_robot/market/bitmex;sh startDataServer.sh"
 end tell'
-
-
-sleep 1
-
-osascript -e 'tell app "Terminal"
-    do script "cd ~/Documents/github/okex_robot/market/bitmex;sh startTradeServer.sh"
-end tell'
-
-
-sleep 1
-
-
-# 打开okex季度合约工具
-osascript -e 'tell app "Terminal"
-    do script "cd ~/Documents/github/okex_robot/market/okex;sh startDataServer.sh"
-end tell'
-
-sleep 1
-
-osascript -e 'tell app "Terminal"
-    do script "cd ~/Documents/github/okex_robot/market/okex;sh startTradeServer.sh"
-end tell'
-
-#启动管理客户端
-python mainClient.py
