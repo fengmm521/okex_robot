@@ -184,6 +184,39 @@ class TradeTool(object):
             self.lastSub['subtime'] = self.okexDatas[2] - self.bitmexDatas[2]
             # print('-'*20)
             print('ob:',round(self.lastSub['ob']['subOB'],3),self.lastSub['ob']['odeep'],self.lastSub['ob']['bdeep'],'bo:',round(self.lastSub['bo']['subBO'],3),self.lastSub['bo']['odeep'],self.lastSub['bo']['bdeep'],self.lastSub['subtime'])
+    
+    #检测是否需要下单
+    def tradeTest(self):
+        pass
+    # 下单数据格式:
+    # 开多,
+    # {type:ol,amount:100,price:100,islimit:1}
+    # 平多,
+    # {type:cl,amount:100,price:100,islimit:1}
+    # 开空,
+    # {type:os,amount:100,price:100,islimit:1}
+    # 平空
+    # {type:cs,amount:100,price:100,islimit:1}
+
+    # 获取定单状态
+    # 获取所有定单状态
+    # {type:getall}
+    # 使用定单ID获取定单状态
+    # {type:getID,id:123456}
+    # 取消某个定单
+    # {type:cancel,id:123456}
+    # 取消所有定单
+    # {type:cancelall}
+    # 获取费率
+    # {type:funding}
+
+    # 帐户
+    # 获取帐户信息
+    # {type:account}
+    # 提现
+    # {type:withdraw,addr:地址,amount:数量,price:支付手续费,cointype:btc}
+    # okex资金划转
+    # {type:transfer,amount:数量,from:从那个资金帐户划转,to:划转到那个资金帐户,cointype:btc}
     #收到数据   
     #okex数据
     def onOkexData(self,datadic):

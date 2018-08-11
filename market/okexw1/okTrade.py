@@ -21,9 +21,74 @@ class OKFuture:
 
     #收到数据处理端的下单消息
     def onTradeMsg(self,msgdic):
+    # 下单数据格式:
+    # 开多,
+    # {type:ol,amount:100,price:100,islimit:1}
+    # 平多,
+    # {type:cl,amount:100,price:100,islimit:1}
+    # 开空,
+    # {type:os,amount:100,price:100,islimit:1}
+    # 平空
+    # {type:cs,amount:100,price:100,islimit:1}
+
+    # 获取定单状态
+    # 获取所有定单状态
+    # {type:getall}
+    # 使用定单ID获取定单状态
+    # {type:getID,id:123456}
+    # 取消某个定单
+    # {type:cancel,id:123456}
+    # 取消所有定单
+    # {type:cancelall}
+
+    # 帐户
+    # 获取帐户信息
+    # {type:account}
+    # 提现
+    # {type:withdraw,addr:地址,amount:数量,price:支付手续费,cointype:btc}
+    # okex资金划转
+    # {type:transfer,amount:数量,from:从那个资金帐户划转,to:划转到那个资金帐户,cointype:btc}
+        if msgdic['type'] == 'ol' or :#开多
+            symbol = 'btc_usd'
+            contract_type = 'quarter'
+        elif msgdic['type'] == 'cl':#平多
+            pass
+        elif msgdic['type'] == 'os':#开空
+            pass
+        elif msgdic['type'] == 'cs':#平空
+            pass
+        elif msgdic['type'] == 'getall':#获取所有未成交定单
+            pass #返回所有未成交定单数据
+        elif msgdic['type'] == 'getID':#获取某个定单的状态
+            pass #返回请求定单数据
+        elif msgdic['type'] == 'cancelall':#取消所有未成交定单
+            pass
+        elif msgdic['type'] == 'cancel':#取消某个id定单
+            pass
+        elif msgdic['type'] == 'account':#获取帐户信息
+            pass
+        elif msgdic['type'] == 'withdraw':#提现
+            pass
+        elif msgdic['type'] == 'transfer':#okex资金划转
+            pass
         print(msgdic)
         self.sendMsgToClient(str(msgdic))
-
+    #期货下单
+    def future_trade(self,symbol,contractType,price='',amount='',tradeType='',matchPrice='',leverRate=''):
+        FUTURE_TRADE = "/api/v1/future_trade.do?"
+        params = {
+            'api_key':self.__apikey,
+            'symbol':symbol,
+            'contract_type':contractType,
+            'amount':amount,
+            'type':tradeType,
+            'match_price':matchPrice,
+            'lever_rate':leverRate
+        }
+        if price:
+            params['price'] = price
+        params['sign'] = buildMySign(params,self.__secretkey)
+        return httpPost(self.__url,FUTURE_TRADE,params)
     #向数据处理服务器发送消息
     def sendMsgToClient(self,msg):
         try:
@@ -106,22 +171,7 @@ class OKFuture:
         params['sign'] = buildMySign(params,self.__secretkey)
         return httpPost(self.__url,FUTURE_POSITION,params)
 
-    #期货下单
-    def future_trade(self,symbol,contractType,price='',amount='',tradeType='',matchPrice='',leverRate=''):
-        FUTURE_TRADE = "/api/v1/future_trade.do?"
-        params = {
-            'api_key':self.__apikey,
-            'symbol':symbol,
-            'contract_type':contractType,
-            'amount':amount,
-            'type':tradeType,
-            'match_price':matchPrice,
-            'lever_rate':leverRate
-        }
-        if price:
-            params['price'] = price
-        params['sign'] = buildMySign(params,self.__secretkey)
-        return httpPost(self.__url,FUTURE_TRADE,params)
+    
 
     #期货批量下单
     def future_batchTrade(self,symbol,contractType,orders_data,leverRate):
