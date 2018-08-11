@@ -1,6 +1,6 @@
 {
-    "iOkexRate":0.0005,     //主动成交费率
-    "pOkexRate":0.0002,     //被动成交费率
+    "iOkexRate":0.0005,     //okex主动成交费率
+    "pOkexRate":0.0002,     //okex被动成交费率
     "iBiemexRate":0.00075,  //bitmex主动成交费率
     "pRateRate":-0.00025,   //bitmex被动成交费率
     "stepPercent":0.005,    //下单网格价格百分比大小
