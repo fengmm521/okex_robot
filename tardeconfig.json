@@ -1,0 +1,9 @@
+{
+    "iOkexRate":0.0005,     //主动成交费率
+    "pOkexRate":0.0002,     //被动成交费率
+    "iBiemexRate":0.00075,  //bitmex主动成交费率
+    "pRateRate":-0.00025,   //bitmex被动成交费率
+    "stepPercent":0.005,    //下单网格价格百分比大小
+    "movePercent":0.003,    //网格滑动价格百分比
+    "normTime":3            //基准价格重新计算时间,单位:小时
+}
