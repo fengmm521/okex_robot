@@ -218,6 +218,15 @@ class bitmexWSTool(object):
                     self.onDeepChangeMessage(datdic)
             elif datdic['table'] == 'quote': #得到最高级深度数据更新
                 self.updateTopDeep(datdic['data'])
+    # "execution:XBTUSD","order:XBTUSD","margin:XTBUSD","position:XTBUSD"]
+            elif datdic['table'] == 'execution':
+                print(msg)
+            elif datdic['table'] == 'order':
+                print(msg)
+            elif datdic['table'] == 'margin':
+                print(msg)
+            elif datdic['table'] == 'position':
+                print(msg)
             else:
                 print(msg)
         else:

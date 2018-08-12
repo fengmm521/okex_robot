@@ -74,10 +74,11 @@ class Servers(socketserver.StreamRequestHandler):
             print("RECV from ", self.client_address)
             print(data)
             dicdata = json.loads(data)
-            if signTool.isSignOK(dicdata,tradetool.secretkey):#验证客户端签名
-                tradetool.onTradeMsg(dicdata)
-            elif dicdata['type'] == 'ping':
+            
+            if dicdata['type'] == 'ping':
                 self.request.send('{"type":"pong","erro":"0"}'.encode())
+            elif signTool.isSignOK(dicdata,tradetool.secretkey):#验证客户端签名
+                tradetool.onTradeMsg(dicdata['data'])
             else:
                 self.request.send('{"erro":"signErro"}'.encode())
 

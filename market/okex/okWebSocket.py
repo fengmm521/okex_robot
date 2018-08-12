@@ -91,11 +91,17 @@ class okWSTool():
     def onTrade(self,datadic):
         # [{"binary":0,"channel":"ok_sub_futureusd_trades","data":{"lever_rate":10.0,"amount":1.0,"orderid":1058866628096,"contract_id":201880010015,"fee":0.0,"contract_name":"LTC0928","unit_amount":10.0,"price_avg":0.0,"type":1,"deal_amount":0.0,"contract_type":"quarter","user_id":2051526,"system_type":0,"price":70.0,"create_date_str":"2018-07-07 00:09:37","create_date":1530893377117,"status":0}}]
         print(datadic)
+        if type(datadic) == dict:
+            msg = json.dumps(datadic)
+            self.sendMsgToClient(msg)
 
     #合约持仓信息更新
     def onPositionsChange(self,datadic):
         #[{"binary":0,"channel":"ok_sub_futureusd_positions","data":{"symbol":"ltc_usd","user_id":2051526,"positions":[{"bondfreez":0.01428571,"margin":0.0,"avgprice":82.005,"eveningup":0.0,"contract_id":201809280015,"hold_amount":0.0,"contract_name":"LTC0928","realized":0.0,"position":1,"costprice":73.499,"position_id":938193331968},{"bondfreez":0.01428571,"margin":0.0,"avgprice":0.0,"eveningup":0.0,"contract_id":201809210015,"hold_amount":0.0,"contract_name":"LTC0928","realized":0.0,"position":2,"costprice":0.0,"position_id":938195331968}]}}]
         print(datadic)
+        if type(datadic) == dict:
+            msg = json.dumps(datadic)
+            self.sendMsgToClient(msg)
 
     #用户帐户信息更新
     def onUserInfoChange(self,datadic):
