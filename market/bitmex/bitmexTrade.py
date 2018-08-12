@@ -5,7 +5,7 @@
 import bitmex
 
 import json
-
+import datetime
 # kfpth = '../../../../btc/bitmex/key.txt'
 # kfpth = '/Users/Allen/Documents/key/bitmexkey.txt'
 
@@ -24,23 +24,28 @@ class BitMexFuture:
         self.baseAmount = 100
         self.isTest = isTest
 
-        dep = self.future_depth()
-        print(dep)
-
         self.csocket = None
+
+        self.baseCID = 1
 
     def setClientSocket(self,clientsocket):
         self.csocket = clientsocket
 
     #向数据分析客户端发送消息
     def sendMsgToClient(self,msg):
-        try:
+        # try:
+        if True:
+            pmsg = msg
+            if type(msg) == dict or type(msg) == list:
+                pmsg = json.dumps(msg)
+            elif type(msg) == tuple:
+                pmsg = json.dumps(msg[0])
             if self.csocket:
-                self.csocket.send(msg.encode())
+                self.csocket.send(pmsg.encode())
             else:
                 print("没有客户端连接")
-        except Exception as e:
-            print('客户端网络错误')
+        # except Exception as e:
+        #     print('客户端网络错误')
     #收到来自数据分析客户端的下单请求
     def onTradeMsg(self,msgdict):
         #{'type':'os','amount':0,'postOnly':1}
@@ -48,13 +53,13 @@ class BitMexFuture:
         #{'type':'set','amount':100}
     # 下单数据格式:
     # 开多,
-    # {type:ol,amount:100,price:100,islimit:1}
+    # {type:ol,amount:100,price:100,islimit:1,cid:clientorderid}
     # 平多,
-    # {type:cl,amount:100,price:100,islimit:1}
+    # {type:cl,amount:100,price:100,islimit:1,cid:clientorderid}
     # 开空,
-    # {type:os,amount:100,price:100,islimit:1}
+    # {type:os,amount:100,price:100,islimit:1,cid:clientorderid}
     # 平空
-    # {type:cs,amount:100,price:100,islimit:1}
+    # {type:cs,amount:100,price:100,islimit:1,cid:clientorderid}
 
     # 获取定单状态
     # 获取所有定单状态
@@ -77,14 +82,11 @@ class BitMexFuture:
     # {type:transfer,amount:数量,from:从那个资金帐户划转,to:划转到那个资金帐户,cointype:btc}
         
         bcmsg = ''
-        if msgdict['type'] == 'test':
-            self.isTest = bool(msgdict['test'])
-            bcmsg = 'setTest:%d'%(self.isTest)
-        elif msgdict['type'] == 'ol':#开多
+        
+        if msgdict['type'] == 'ol':#开多
             # self.baseAmount = msgdict['amount']
             if self.isTest:
-                bcmsg = 'bimex_test_ol'
-
+                bcmsg = '{"type":"bimex_test_ol"}'
             else:
                 bcmsg = self.future_trade_xbtusd(msgdict['price'], msgdict['amount'],'ol',bool(msgdict['islimit']))
             savestr = 'ol,price:%.1f,amount:%d,islimit:%d,bc:'%(msgdict['price'],msgdict['amount'],msgdict['islimit']) + str(bcmsg)
@@ -92,7 +94,7 @@ class BitMexFuture:
             print(savestr)
         elif msgdict['type'] == 'cl':#平多
             if self.isTest:
-                bcmsg = 'bimex_test_cl'
+                bcmsg = '{"type":"bimex_test_cl"}'
             else:
                 bcmsg = self.future_trade_xbtusd(msgdict['price'], msgdict['amount'],'cl',bool(msgdict['islimit']))
             savestr = 'cl,price:%.1f,amount:%d,islimit:%d,bc:'%(msgdict['price'],msgdict['amount'],msgdict['islimit']) + str(bcmsg)
@@ -100,7 +102,7 @@ class BitMexFuture:
             print(savestr)
         elif msgdict['type'] == 'os':#开空
             if self.isTest:
-                bcmsg = 'bimex_test_os'
+                bcmsg = '{"type":"bimex_test_os"}'
             else:
                 bcmsg = self.future_trade_xbtusd(msgdict['price'], msgdict['amount'],'os',bool(msgdict['islimit']))
             savestr = 'os,price:%.1f,amount:%d,islimit:%d,bc:'%(msgdict['price'],msgdict['amount'],msgdict['islimit']) + str(bcmsg)
@@ -108,70 +110,109 @@ class BitMexFuture:
             print(savestr)
         elif msgdict['type'] == 'cs':#平空
             if self.isTest:
-                bcmsg = 'bimex_test_cs'
+                bcmsg = '{"type":"bimex_test_cs"}'
             else:
                 bcmsg = self.future_trade_xbtusd(msgdict['price'], msgdict['amount'],'cs',bool(msgdict['islimit']))
             savestr = 'os,price:%.1f,amount:%d,islimit:%d,bc:'%(msgdict['price'],msgdict['amount'],msgdict['islimit']) + str(bcmsg)
             self.testTradeSave(savestr)
             print(savestr)
-        elif msgdic['type'] == 'getall':#获取所有未成交定单
+        elif msgdict['type'] == 'getall':#获取所有未成交定单
             # pass #返回所有未成交定单数据
             bcmsg = self.future_orderinfo()
-        elif msgdic['type'] == 'getID':#获取某个定单的状态
-            self.future_orderinfo(self,orderID = msgdict['id'])
-        elif msgdic['type'] == 'cancelall':#取消所有未成交定单
+        elif msgdict['type'] == 'getID':#获取某个定单的状态
+            bcmsg = self.future_orderinfo(orderID = msgdict['id'])
+        elif msgdict['type'] == 'cancelall':#取消所有未成交定单
             bcmsg = self.future_cancel(orderId = '')
-        elif msgdic['type'] == 'cancel':#取消某个id定单
+        elif msgdict['type'] == 'cancel':#取消某个id定单
             bcmsg = self.future_cancel(orderId = msgdict['id'])
-        elif msgdic['type'] == 'account':#获取帐户信息
+        elif msgdict['type'] == 'account':#获取帐户信息
             bcmsg = self.future_userinfo()
-        elif msgdic['type'] == 'withdraw':#提现
+        elif msgdict['type'] == 'withdraw':#提现
             pass
             #暂时没实现提现接口
-        elif msgdic['type'] == 'transfer':#okex资金划转
+        elif msgdict['type'] == 'transfer':#okex资金划转
             pass
             #bitmex没有资金划转
         elif msgdict['type'] == 'funding':#bitmex获取持仓费率,
             bcmsg = self.future_funding()
+        elif msgdict['type'] == 'test':
+            self.isTest = bool(msgdict['test'])
+            bcmsg = '{"bitmex_etTest":%d}'%(self.isTest)
         print(bcmsg)
-        self.sendMsgToClient(str(bcmsg))
+        self.sendMsgToClient(bcmsg)
         return
+
+    def timeconvent(self,utcstrtime):
+        timest = timetool.utcStrTimeToTime(utcstrtime)
+        timeint = int(timest)
+        ltimeStr = str(timetool.timestamp2datetime(timeint,True))   
+        return timeint,ltimeStr 
+
+    def conventTimeWithList(self,datas):
+        outs = []
+        for d in datas:
+            tmpdic = {}
+            for k in d.keys():
+                if type(d[k]) == datetime.datetime:
+                        tmpdic[k] = int(d[k].timestamp())
+                else:
+                    tmpdic[k] = d[k]
+            outs.append(tmpdic)
+        return outs
+
     #获取最近5次的持仓费率
     def future_funding(self):
         #https://www.bitmex.com/api/v1/funding?count=5&reverse=true
-        res = self.client.Funding.Funding_get(filter = '{"symbol":"xbtusd"}',count = 5,reverse = True).result()
-        print(res)
-        return res
+        res = self.client.Funding.Funding_get(filter = '{"symbol":"XBTUSD"}',count = 5,reverse = True).result()
+        outdatas = self.conventTimeWithList(res[0])
+        return outdatas
     #期货全仓账户信息
+
+    def conventTimeWithDict(self,d):
+        tmpdic = {}
+        for k in d.keys():
+            if type(d[k]) == datetime.datetime:
+                    tmpdic[k] = int(d[k].timestamp())
+            else:
+                tmpdic[k] = d[k]
+        return tmpdic
+
     def future_userinfo(self):
         res = self.client.User.User_getMargin().result()
         print(res)
-        return res
+        outs = self.conventTimeWithDict(res[0])
+        return outs
         #https://www.bitmex.com/api/v1/user/margin?currency=XBt
 
     #期货取消所有定单订单
     def future_cancel(self,orderId = ''):
         res = None
         if orderId == '' or (not orderId):
-            res = self.client.Order.Order_cancelAll().result()
+            res = self.client.Order.Order_cancelAll().result()[0]
             print(res)
         else:
-            res = self.client.Order.Order_cancel(orderId).result()
+            res = self.client.Order.Order_cancel(orderId).result()[0]
             print(res)
-        return res
+        if res:
+            outs = self.conventTimeWithDict(res[0])
+            return outs
+        else:
+            return res
 
     #期货获取所有订单信息,或者某一个定单信息
     def future_orderinfo(self,orderID = ''):
         # https://www.bitmex.com/api/v1/order?filter=%7B%22symbol%22%3A%20%22XBTUSD%22%7D&count=100&reverse=true
         #获取最后10定单，有成交的也有没有成交的
         if orderID == '':
-            res = self.client.Order.Order_getOrders(filter = '{"symbol":"xbtusd"}',count = 10,reverse = True).result()
-            print(res)
-            return res
+            res = self.client.Order.Order_getOrders(filter = '{"symbol": "XBTUSD"}',count = 5,reverse = True).result()
+            # [{'orderID': '7c6ca135-52e3-6ecb-6b93-5e6edf914f97', 'clOrdID': '', 'clOrdLinkID': '', 'account': 278343, 'symbol': 'XBTUSD', 'side': 'Buy', 'simpleOrderQty': None, 'orderQty': 100, 'price': 6285.0, 'displayQty': None, 'stopPx': None, 'pegOffsetValue': None, 'pegPriceType': '', 'currency': 'USD', 'settlCurrency': 'XBt', 'ordType': 'Limit', 'timeInForce': 'GoodTillCancel', 'execInst': 'Close', 'contingencyType': '', 'exDestination': 'XBME', 'ordStatus': 'New', 'triggered': '', 'workingIndicator': True, 'ordRejReason': '', 'simpleLeavesQty': 0.0159, 'leavesQty': 100, 'simpleCumQty': 0.0, 'cumQty': 0, 'avgPx': None, 'multiLegReportingType': 'SingleSecurity', 'text': 'Position Close from www.bitmex.com', 'transactTime': datetime.datetime(2018, 8, 12, 18, 53, 15, 872000, tzinfo=tzutc()), 'timestamp': datetime.datetime(2018, 8, 12, 18, 53, 15, 872000, tzinfo=tzutc())}, {'orderID': '5ecdab76-6324-64f0-58a9-f41b7e05af3e', 'clOrdID': '', 'clOrdLinkID': '', 'account': 278343, 'symbol': 'XBTUSD', 'side': 'Sell', 'simpleOrderQty': None, 'orderQty': 100, 'price': 6295.0, 'displayQty': None, 'stopPx': None, 'pegOffsetValue': None, 'pegPriceType': '', 'currency': 'USD', 'settlCurrency': 'XBt', 'ordType': 'Limit', 'timeInForce': 'GoodTillCancel', 'execInst': 'ParticipateDoNotInitiate', 'contingencyType': '', 'exDestination': 'XBME', 'ordStatus': 'Filled', 'triggered': '', 'workingIndicator': False, 'ordRejReason': '', 'simpleLeavesQty': 0.0, 'leavesQty': 0, 'simpleCumQty': 0.015886, 'cumQty': 100, 'avgPx': 6295.0, 'multiLegReportingType': 'SingleSecurity', 'text': 'Submitted via API.', 'transactTime': datetime.datetime(2018, 8, 12, 18, 46, 13, 593000, tzinfo=tzutc()), 'timestamp': datetime.datetime(2018, 8, 12, 18, 49, 47, 302000, tzinfo=tzutc())}, {'orderID': '87adcf6b-e22c-34d8-4902-242a24b9ba02', 'clOrdID': '', 'clOrdLinkID': '', 'account': 278343, 'symbol': 'XBTUSD', 'side': 'Buy', 'simpleOrderQty': None, 'orderQty': 600, 'price': 5800.0, 'displayQty': None, 'stopPx': None, 'pegOffsetValue': None, 'pegPriceType': '', 'currency': 'USD', 'settlCurrency': 'XBt', 'ordType': 'Limit', 'timeInForce': 'GoodTillCancel', 'execInst': '', 'contingencyType': '', 'exDestination': 'XBME', 'ordStatus': 'New', 'triggered': '', 'workingIndicator': True, 'ordRejReason': '', 'simpleLeavesQty': 0.0953, 'leavesQty': 600, 'simpleCumQty': 0.0, 'cumQty': 0, 'avgPx': None, 'multiLegReportingType': 'SingleSecurity', 'text': 'Submission from www.bitmex.com', 'transactTime': datetime.datetime(2018, 8, 10, 23, 8, 56, 18000, tzinfo=tzutc()), 'timestamp': datetime.datetime(2018, 8, 12, 18, 50, 0, 904000, tzinfo=tzutc())}, {'orderID': 'c3b4fff9-960e-8c2e-86c4-7264e111046d', 'clOrdID': '', 'clOrdLinkID': '', 'account': 278343, 'symbol': 'XBTUSD', 'side': 'Buy', 'simpleOrderQty': None, 'orderQty': 300, 'price': 6120.0, 'displayQty': None, 'stopPx': None, 'pegOffsetValue': None, 'pegPriceType': '', 'currency': 'USD', 'settlCurrency': 'XBt', 'ordType': 'Limit', 'timeInForce': 'GoodTillCancel', 'execInst': '', 'contingencyType': '', 'exDestination': 'XBME', 'ordStatus': 'Filled', 'triggered': '', 'workingIndicator': False, 'ordRejReason': '', 'simpleLeavesQty': 0.0, 'leavesQty': 0, 'simpleCumQty': 0.04902, 'cumQty': 300, 'avgPx': 6120.0, 'multiLegReportingType': 'SingleSecurity', 'text': 'Submission from www.bitmex.com', 'transactTime': datetime.datetime(2018, 8, 9, 22, 13, 11, 424000, tzinfo=tzutc()), 'timestamp': datetime.datetime(2018, 8, 10, 20, 49, 54, 809000, tzinfo=tzutc())}, {'orderID': '370a0683-e566-d21f-5ec8-0b77a26d7615', 'clOrdID': '', 'clOrdLinkID': '', 'account': 278343, 'symbol': 'XBTUSD', 'side': 'Buy', 'simpleOrderQty': None, 'orderQty': 300, 'price': 6400.0, 'displayQty': None, 'stopPx': None, 'pegOffsetValue': None, 'pegPriceType': '', 'currency': 'USD', 'settlCurrency': 'XBt', 'ordType': 'Limit', 'timeInForce': 'GoodTillCancel', 'execInst': '', 'contingencyType': '', 'exDestination': 'XBME', 'ordStatus': 'Filled', 'triggered': '', 'workingIndicator': False, 'ordRejReason': '', 'simpleLeavesQty': 0.0, 'leavesQty': 0, 'simpleCumQty': 0.046875, 'cumQty': 300, 'avgPx': 6400.0, 'multiLegReportingType': 'SingleSecurity', 'text': 'Submission from www.bitmex.com', 'transactTime': datetime.datetime(2018, 8, 8, 9, 52, 27, 568000, tzinfo=tzutc()), 'timestamp': datetime.datetime(2018, 8, 8, 16, 38, 28, 731000, tzinfo=tzutc())}, {'orderID': 'd75b92ac-42a6-e43f-d919-ddd57a97af2b', 'clOrdID': '', 'clOrdLinkID': '', 'account': 278343, 'symbol': 'XBTUSD', 'side': 'Buy', 'simpleOrderQty': None, 'orderQty': 1000, 'price': 6520.0, 'displayQty': None, 'stopPx': None, 'pegOffsetValue': None, 'pegPriceType': '', 'currency': 'USD', 'settlCurrency': 'XBt', 'ordType': 'Limit', 'timeInForce': 'GoodTillCancel', 'execInst': 'Close', 'contingencyType': '', 'exDestination': 'XBME', 'ordStatus': 'Filled', 'triggered': '', 'workingIndicator': False, 'ordRejReason': '', 'simpleLeavesQty': 0.0, 'leavesQty': 0, 'simpleCumQty': 0.15188, 'cumQty': 1000, 'avgPx': 6520.0, 'multiLegReportingType': 'SingleSecurity', 'text': 'Position Close from www.bitmex.com', 'transactTime': datetime.datetime(2018, 8, 8, 0, 34, 55, 929000, tzinfo=tzutc()), 'timestamp': datetime.datetime(2018, 8, 8, 4, 8, 45, 692000, tzinfo=tzutc())}, {'orderID': 'e271b60c-3271-9c1e-e72a-285547b1ac7e', 'clOrdID': '', 'clOrdLinkID': '', 'account': 278343, 'symbol': 'XBTUSD', 'side': 'Sell', 'simpleOrderQty': None, 'orderQty': 1000, 'price': 6584.0, 'displayQty': None, 'stopPx': None, 'pegOffsetValue': None, 'pegPriceType': '', 'currency': 'USD', 'settlCurrency': 'XBt', 'ordType': 'Limit', 'timeInForce': 'GoodTillCancel', 'execInst': '', 'contingencyType': '', 'exDestination': 'XBME', 'ordStatus': 'Filled', 'triggered': '', 'workingIndicator': False, 'ordRejReason': '', 'simpleLeavesQty': 0.0, 'leavesQty': 0, 'simpleCumQty': 0.15188, 'cumQty': 1000, 'avgPx': 6584.0, 'multiLegReportingType': 'SingleSecurity', 'text': 'Submission from www.bitmex.com', 'transactTime': datetime.datetime(2018, 8, 8, 0, 28, 55, 748000, tzinfo=tzutc()), 'timestamp': datetime.datetime(2018, 8, 8, 0, 32, 47, 199000, tzinfo=tzutc())}, {'orderID': '206d8fe5-ca0f-81a5-1949-67f326b29b22', 'clOrdID': '', 'clOrdLinkID': '', 'account': 278343, 'symbol': 'XBTUSD', 'side': 'Buy', 'simpleOrderQty': None, 'orderQty': 1000, 'price': 6550.0, 'displayQty': None, 'stopPx': None, 'pegOffsetValue': None, 'pegPriceType': '', 'currency': 'USD', 'settlCurrency': 'XBt', 'ordType': 'Limit', 'timeInForce': 'GoodTillCancel', 'execInst': 'Close', 'contingencyType': '', 'exDestination': 'XBME', 'ordStatus': 'Filled', 'triggered': '', 'workingIndicator': False, 'ordRejReason': '', 'simpleLeavesQty': 0.0, 'leavesQty': 0, 'simpleCumQty': 0.14131, 'cumQty': 1000, 'avgPx': 6550.0, 'multiLegReportingType': 'SingleSecurity', 'text': 'Position Close from www.bitmex.com', 'transactTime': datetime.datetime(2018, 8, 7, 21, 10, 29, 501000, tzinfo=tzutc()), 'timestamp': datetime.datetime(2018, 8, 8, 0, 12, 58, 809000, tzinfo=tzutc())}, {'orderID': '03928647-56b7-d6c0-faf6-1ea07abc15f9', 'clOrdID': '', 'clOrdLinkID': '', 'account': 278343, 'symbol': 'XBTUSD', 'side': 'Sell', 'simpleOrderQty': None, 'orderQty': 1000, 'price': 7076.5, 'displayQty': None, 'stopPx': None, 'pegOffsetValue': None, 'pegPriceType': '', 'currency': 'USD', 'settlCurrency': 'XBt', 'ordType': 'Limit', 'timeInForce': 'GoodTillCancel', 'execInst': '', 'contingencyType': '', 'exDestination': 'XBME', 'ordStatus': 'Filled', 'triggered': '', 'workingIndicator': False, 'ordRejReason': '', 'simpleLeavesQty': 0.0, 'leavesQty': 0, 'simpleCumQty': 0.14131, 'cumQty': 1000, 'avgPx': 7076.5, 'multiLegReportingType': 'SingleSecurity', 'text': 'Submission from www.bitmex.com', 'transactTime': datetime.datetime(2018, 8, 7, 12, 27, 55, 899000, tzinfo=tzutc()), 'timestamp': datetime.datetime(2018, 8, 7, 12, 29, 11, 611000, tzinfo=tzutc())}, {'orderID': '5157726e-5091-75e1-fb60-4a875918889c', 'clOrdID': '', 'clOrdLinkID': '', 'account': 278343, 'symbol': 'XBTUSD', 'side': 'Buy', 'simpleOrderQty': None, 'orderQty': 1000, 'price': 6850.0, 'displayQty': None, 'stopPx': None, 'pegOffsetValue': None, 'pegPriceType': '', 'currency': 'USD', 'settlCurrency': 'XBt', 'ordType': 'Limit', 'timeInForce': 'GoodTillCancel', 'execInst': 'Close', 'contingencyType': '', 'exDestination': 'XBME', 'ordStatus': 'Filled', 'triggered': '', 'workingIndicator': False, 'ordRejReason': '', 'simpleLeavesQty': 0.0, 'leavesQty': 0, 'simpleCumQty': 0.13297, 'cumQty': 1000, 'avgPx': 6850.0, 'multiLegReportingType': 'SingleSecurity', 'text': 'Position Close from www.bitmex.com', 'transactTime': datetime.datetime(2018, 8, 4, 16, 39, 27, 590000, tzinfo=tzutc()), 'timestamp': datetime.datetime(2018, 8, 6, 21, 16, 43, 546000, tzinfo=tzutc())}]
+            dep = self.conventTimeWithList(res[0])
+            return dep
         else:
             res = self.client.Order.Order_getOrders(filter = '{"symbol":"xbtusd","orderID": "%s"}'%(orderID),count = 10,reverse = True).result()
             print(res)
-            return res
+            dep = self.conventTimeWithList(res[0])
+            return dep
   #       [{
   #   "orderID": "87adcf6b-e22c-34d8-4902-242a24b9ba02",   #定单ID,
   #   "clOrdID": "",                                        #定单用户定义ID
@@ -215,7 +256,7 @@ class BitMexFuture:
         f.write(outstr)
         f.close()
     #xbtusd期货下单
-    def future_trade_xbtusd(self,price,amount,tradeType,postOnly):
+    def future_trade_xbtusd(self,price,amount,tradeType,postOnly,clientID = ''):
     # bitmex的被动下单方式:
     # 设置order的execInst参数为ParticipateDoNotInitiate，当下单价格为主动成交时，下单会被取消
     # ParticipateDoNotInitiate: Also known as a Post-Only order. 
@@ -226,41 +267,48 @@ class BitMexFuture:
         # print('-----------------------')
         # print(self.client.Order.__dict__)
         # print(dir(self.client.Order))
+        cID = clientID
+        if cID == '':
+            self.baseCID += 1
+            cID = tradeType + '-' + str(self.baseCID) + '-' + str(time.time())
+
         if tradeType == 'ol': #开多
             
             if postOnly:
                 print('被动开多:',tmpprice,amount)
-                res = self.client.Order.Order_new(symbol='XBTUSD', orderQty=int(amount),execInst='ParticipateDoNotInitiate', price=float(tmpprice)).result()
+                res = self.client.Order.Order_new(symbol='XBTUSD', orderQty=int(amount),clOrdID = cID,execInst='ParticipateDoNotInitiate', price=float(tmpprice)).result()
             else:
                 print('开多:',tmpprice,amount)
-                res = self.client.Order.Order_new(symbol='XBTUSD', orderQty=int(amount), price=float(tmpprice)).result()
+                res = self.client.Order.Order_new(symbol='XBTUSD', orderQty=int(amount),clOrdID = cID, price=float(tmpprice)).result()
         elif tradeType == 'cl': #平多
             
             if postOnly:
                 print('被动平多:',tmpprice,amount)
-                res = self.client.Order.Order_new(symbol='XBTUSD', orderQty=-int(amount),execInst='ParticipateDoNotInitiate', price=float(tmpprice)).result()
+                res = self.client.Order.Order_new(symbol='XBTUSD', orderQty=-int(amount),clOrdID = cID,execInst='ParticipateDoNotInitiate', price=float(tmpprice)).result()
             else:
                 print('平多:',tmpprice,amount)
-                res = self.client.Order.Order_new(symbol='XBTUSD', orderQty=-int(amount),execInst='Close', price=float(tmpprice)).result()
+                res = self.client.Order.Order_new(symbol='XBTUSD', orderQty=-int(amount),clOrdID = cID,execInst='Close', price=float(tmpprice)).result()
         elif tradeType == 'os': #开空
             
             if postOnly:
                 print('被动开空:',tmpprice,amount)
-                res = self.client.Order.Order_new(symbol='XBTUSD', orderQty=-int(amount),execInst='ParticipateDoNotInitiate', price=float(tmpprice)).result()
+                res = self.client.Order.Order_new(symbol='XBTUSD', orderQty=-int(amount),clOrdID = cID,execInst='ParticipateDoNotInitiate', price=float(tmpprice)).result()
             else:
                 print('开空:',tmpprice,amount)
-                res = self.client.Order.Order_new(symbol='XBTUSD', orderQty=-int(amount), price=float(tmpprice)).result()
+                res = self.client.Order.Order_new(symbol='XBTUSD', orderQty=-int(amount),clOrdID = cID, price=float(tmpprice)).result()
         elif tradeType == 'cs': #平空
             
             if postOnly:
                 print('被动平空:',tmpprice,amount)
-                res = self.client.Order.Order_new(symbol='XBTUSD', orderQty=int(amount),execInst='ParticipateDoNotInitiate', price=float(tmpprice)).result()
+                res = self.client.Order.Order_new(symbol='XBTUSD', orderQty=int(amount),clOrdID = cID,execInst='ParticipateDoNotInitiate', price=float(tmpprice)).result()
             else:
                 print('平空:',tmpprice,amount)
-                res = self.client.Order.Order_new(symbol='XBTUSD', orderQty=int(amount),execInst='Close', price=float(tmpprice)).result()
+                res = self.client.Order.Order_new(symbol='XBTUSD', orderQty=int(amount),clOrdID = cID,execInst='Close', price=float(tmpprice)).result()
         else:
             print('tradeType,下单类型设置错误:',tradeType)
-        return res[0]
+
+        outs = self.conventTimeWithDict(res[0])
+        return outs
 
     #OKCoin期货市场深度信息
     def future_depth(self,size = 2,symbol = 'XBT',contractType = 'XBTUSD'): 
@@ -330,12 +378,94 @@ class BitMexFuture:
         # return httpPost(self.__url,FUTURE_BATCH_TRADE,params)
 
 def main():
-    futuretool = BitMexFuture()
-    dep = futuretool.future_depth()
-    print(type(dep))
-    print(type(dep[0]))
-    print(dep)
+    import os,sys
 
+    from sys import version_info  
+
+    if version_info.major < 3:
+        import SocketServer as socketserver
+        magetoolpth = '/usr/local/lib/python2.7/site-packages'
+        if magetoolpth not in sys.path:
+            sys.path.append(magetoolpth)
+        else:
+            print('heave magetool pth')
+    else:
+        import socketserver
+
+    import socket
+    import json
+
+    from magetool import pathtool
+
+    nfpth = os.path.abspath(__file__)
+    ndir,_ = os.path.split(nfpth)
+    pdir = pathtool.GetParentPath(ndir)
+    ppdir = pathtool.GetParentPath(pdir) + os.sep + 'util'
+    sys.path.append(ppdir)
+    import apikeytool
+
+
+    apikey = apikeytool.apikeydic['bitmex']['apikey']
+    secretkey = apikeytool.apikeydic['bitmex']['secretkey']
+    isTest =  bool(apikeytool.apikeydic['isTest'])
+    futuretool = BitMexFuture(apikey,secretkey,isTest = True)
+    dep = futuretool.future_funding()
+    print(type(dep[0]['fundingInterval']))
+    print(dep[0]['fundingInterval'])
+    if type(dep[0]['fundingInterval']) == datetime.datetime:
+        print('dddd---------------------')
+
+
+    # [{
+#   'orderID': '7c6ca135-52e3-6ecb-6b93-5e6edf914f97',
+#   'clOrdID': '',
+#   'clOrdLinkID': '',
+#   'account': 278343,
+#   'symbol': 'XBTUSD',
+#   'side': 'Buy',
+#   'simpleOrderQty': None,
+#   'orderQty': 100,
+#   'price': 6285.0,
+#   'displayQty': None,
+#   'stopPx': None,
+#   'pegOffsetValue': None,
+#   'pegPriceType': '',
+#   'currency': 'USD',
+#   'settlCurrency': 'XBt',
+#   'ordType': 'Limit',
+#   'timeInForce': 'GoodTillCancel',
+#   'execInst': 'Close',
+#   'contingencyType': '',
+#   'exDestination': 'XBME',
+#   'ordStatus': 'Canceled',
+#   'triggered': '',
+#   'workingIndicator': False,
+#   'ordRejReason': '',
+#   'simpleLeavesQty': 0.0,
+#   'leavesQty': 0,
+#   'simpleCumQty': 0.0,
+#   'cumQty': 0,
+#   'avgPx': None,
+#   'multiLegReportingType': 'SingleSecurity',
+#   'text': 'Canceled: Position is in liquidation\nPosition Close from www.bitmex.com',
+#   'transactTime': datetime.datetime(2018,
+#   8,
+#   12,
+#   18,
+#   53,
+#   15,
+#   872000,
+#   tzinfo=tzutc()),
+#   'timestamp': datetime.datetime(2018,
+#   8,
+#   12,
+#   19,
+#   26,
+#   9,
+#   577000,
+#   tzinfo=tzutc())
+# },
+#{}]
 if __name__ == '__main__':
     main()
 

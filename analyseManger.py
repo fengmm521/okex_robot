@@ -23,7 +23,7 @@ from magetool import timetool
 sys.path.append('util')
 import signTool
 
-
+import orderObj
 
 def sayMsg(msg):
     cmd = 'say %s'%(msg)
@@ -92,17 +92,32 @@ class TradeTool(object):
         ptime = int(time.time())
         self.lastimedic = {'bd':ptime,'bt':ptime,'od':ptime,'ot':ptime}
 
-        self.initSocket()
-
         self.okexDatas = []             #买一价，卖一价，接收数据时间
         self.bitmexDatas = []           #买一价，卖一价, 接收数据时间
         self.lastSub = {}               #okex的卖一价和bitmex的买一价的差价，bitmex的卖一价和okex的买一价的差价,时间差,最后接收时间
         self.obsubs = []
         self.bosubs = []
         self.arvsub = 0                 #滑动差值
-        self.okexTradeMsgs = []
+        self.okexTradeMsgs = []         #bitmex已下单，等待bitmex成交后，再吃单成交的okex
+
+        self.openTrade = []             #保存的开仓对
+
+        self.bCIDBase = 0               #bitmex的用户自定义定单ID基数
+        self.oCIDBase = 0               #okex用户自定义定单ID基数
+
+        self.bCIDData = {}
+        #定单ID生成算法：b_orderType_CIDBase_time
+        self.oCIDData = {}
+
+        self.initSocket()
 
     def initSocket(self):
+        self.initOkexTradeSocket()
+        self.initOkexDataSocket()
+        self.initBitmexTradeSocket()
+        self.initBitmexDataSocket()
+    
+    def initOkexTradeSocket(self):
         isErro = False
         try:
             print('connecting okex http trade server:',self.configdic['okex']['httpaddr'],self.configdic['okex']['httpport'])
@@ -112,8 +127,14 @@ class TradeTool(object):
             def okexTradeRun():
                 while True:
                     data = self.okexTradeSocket.recv(100*1024)
-                    datadic = json.loads(data.decode())
-                    self.onOkexTradeBack(datadic)
+                    isOK = False
+                    try:
+                        datadic = json.loads(data.decode())
+                        isOK = True
+                    except Exception as e:
+                        print(data)
+                    if isOK:
+                        self.onOkexTradeBack(datadic)
             self.okexTradethr = threading.Thread(target=okexTradeRun,args=())
             self.okexTradethr.setDaemon(True)
             self.okexTradethr.start()
@@ -122,6 +143,9 @@ class TradeTool(object):
             print('connect okex http trade server erro...')
             self.okexTradeSocket = None
             isErro =  True
+        return (not isErro)
+    def initOkexDataSocket(self):
+        isErro = False
         try:
             print('connecting okex ws data server:',self.configdic['okex']['wsaddr'],self.configdic['okex']['wsport'])
             self.okexDataSocket = socket.socket()  # instantiate
@@ -132,6 +156,7 @@ class TradeTool(object):
                     data = self.okexDataSocket.recv(100*1024)
                     datadic = json.loads(data.decode())
                     self.onOkexData(datadic)
+
             self.okexDatathr = threading.Thread(target=okexDataRun,args=())
             self.okexDatathr.setDaemon(True)
             self.okexDatathr.start()
@@ -140,24 +165,10 @@ class TradeTool(object):
             print('connect erro okex ws data...')
             self.okexDataSocket = None
             isErro =  True
-        try:
-            print('connecting bitmex Trade data server:',self.configdic['bitmex']['httpaddr'],self.configdic['bitmex']['httpport'])
-            self.bitmexTradeSocket = socket.socket()  # instantiate
-            self.bitmexTradeSocket.connect((self.configdic['bitmex']['httpaddr'], self.configdic['bitmex']['httpport']))  # connect to the server
-            print('bitmex ws Trade server connected!')
-            def okexDataRun():
-                while True:
-                    data = self.bitmexTradeSocket.recv(100*1024)
-                    datadic = json.loads(data.decode())
-                    self.onBitmexTradeBack(datadic)
-            self.bitmexTradethr = threading.Thread(target=okexDataRun,args=())
-            self.bitmexTradethr.setDaemon(True)
-            self.bitmexTradethr.start()
-            self.socketstate['bt'] = True
-        except Exception as e:
-            print('connect erro bitmex trade...')
-            self.bitmexTradeSocket = None
-            isErro =  True
+        return (not isErro)
+    
+    def initBitmexDataSocket(self):
+        isErro = False
         try:
             print('connecting bitmex ws data server:',self.configdic['bitmex']['wsaddr'],self.configdic['bitmex']['wsport'])
             self.bitmexDataSocket = socket.socket()  # instantiate
@@ -166,12 +177,14 @@ class TradeTool(object):
             def bitmexDataRun():
                 while True:
                     data = self.bitmexDataSocket.recv(100*1024)
+                    isOKBitmexData = False
                     try:
                         datadic = json.loads(data.decode())
-                        self.onBitmexData(datadic)
+                        isOKBitmexData = True
                     except Exception as e:
-                        print('-------erro bitmex data -------')
                         print(data)
+                    if isOKBitmexData:
+                        self.onBitmexData(datadic)
                     
             self.bitmexDatathr = threading.Thread(target=bitmexDataRun,args=())
             self.bitmexDatathr.setDaemon(True)
@@ -182,6 +195,34 @@ class TradeTool(object):
             self.bitmexDataSocket = None
             isErro =  True
         return (not isErro)
+    def initBitmexTradeSocket(self):
+        isErro = False
+        try:
+            print('connecting bitmex Trade data server:',self.configdic['bitmex']['httpaddr'],self.configdic['bitmex']['httpport'])
+            self.bitmexTradeSocket = socket.socket()  # instantiate
+            self.bitmexTradeSocket.connect((self.configdic['bitmex']['httpaddr'], self.configdic['bitmex']['httpport']))  # connect to the server
+            print('bitmex ws Trade server connected!')
+            def okexDataRun():
+                while True:
+                    data = self.bitmexTradeSocket.recv(100*1024)
+                    isOKBitmexTrade = False
+                    try:
+                        datadic = json.loads(data.decode())
+                        isOKBitmexTrade = True
+                    except Exception as e:
+                        print(data)
+                    if isOKBitmexTrade:
+                        self.onBitmexTradeBack(datadic)
+            self.bitmexTradethr = threading.Thread(target=okexDataRun,args=())
+            self.bitmexTradethr.setDaemon(True)
+            self.bitmexTradethr.start()
+            self.socketstate['bt'] = True
+        except Exception as e:
+            print('connect erro bitmex trade...')
+            self.bitmexTradeSocket = None
+            isErro =  True
+        return (not isErro)
+
 
     def timeconvent(self,utcstrtime):
         timest = timetool.utcStrTimeToTime(utcstrtime)
@@ -201,7 +242,7 @@ class TradeTool(object):
             self.lastSub['subtime'] = self.okexDatas[2] - self.bitmexDatas[2]
             # print('-'*20)
             print('ob:',round(self.lastSub['ob']['subOB'],3),self.lastSub['ob']['odeep'],self.lastSub['ob']['bdeep'],'bo:',round(self.lastSub['bo']['subBO'],3),self.lastSub['bo']['odeep'],self.lastSub['bo']['bdeep'],self.lastSub['subtime'])
-    
+            self.tradeTest()
     #初始化交易参数,如单次下单合约值，谁主动成交，谁被动成交,交易手续费等
     def initTraddeConfig(self,conf):
         self.tradeConfig = conf
@@ -216,106 +257,138 @@ class TradeTool(object):
         self.normTime = self.tradeConfig['normTime']*60*60    #小时换算成秒
         self.baseAmount = self.tradeConfig['baseAmount']      #okex合约张数，bitmex要X100
 
-    def onBiemexTradeOK(self):
-        ptype = self.okexTradeMsgs.pop(0)
-        if ptype == 'ol':
-            msg = {'type':'ol','amount':self.baseAmount,'price':self.okexDatas[1][0],'islimit':1}
-            self.sendMsgToOkexTrade('ol', msg)
-        elif ptype == 'os':
-            msg = {'type':'os','amount':self.baseAmount,'price':self.okexDatas[0][0],'islimit':1}
-            self.sendMsgToOkexTrade('os', msg)
-        elif ptype == 'cl':
-            msg = {'type':'cl','amount':self.baseAmount,'price':self.okexDatas[0][0],'islimit':1}
-            self.sendMsgToOkexTrade('cl', msg)
-        elif ptype == 'cs':
-            msg = {'type':'cs','amount':self.baseAmount,'price':self.okexDatas[1][0],'islimit':1}
-            self.sendMsgToOkexTrade('cs', msg)
-    def openOB(self): #开仓,okex买入，bitmex卖出
-        msg = {'type':'os','amount':self.baseAmount*100,'price':self.bitmexDatas[1][0],'islimit':1}
+    #生成用户自定义定单ID
+    def crecteOrderCID(self,market,orderType):
+        # self.bCIDBase = 0               #bitmex的用户自定义定单ID基数
+        # self.oCIDBase = 0               #okex用户自定义定单ID基数
+        if market == 'bitmex':
+            self.bCIDBase += 1
+            cid = 'b-'+ orderType + '-' + str(self.bCIDBase) + '-' + str(int(time.time()))
+            return cid
+        elif market == 'okex':#实际上okex的api接口并不支持设置用户定义ID
+            self.oCIDBase += 1
+            cid = 'o-'+ orderType + '-' + str(self.oCIDBase) + '-' + str(int(time.time()))
+            return cid
+        return ''
+
+    def openOB(self,subpurce,isReset = False): #开仓,okex买入，bitmex卖出
+        cid = self.crecteOrderCID('bitmex','os')
+        msg = {'type':'os','amount':self.baseAmount*100,'price':self.bitmexDatas[1][0],'islimit':1,'cid':cid}
+        self.bCIDData[cid] = {'msg':msg,'state':0}
         if self.sendMsgToBitmexTrade('os', msg):
-            self.okexTradeMsgs.append({'type':'ol','amount':self.baseAmount})
-            self.obsubs.append(self.bitmexDatas[1][0]-self.okexDatas[1][0])
+            self.okexTradeMsgs.append({'type':'ol','amount':self.baseAmount,'cid':cid})
+            if isReset:
+                self.obsubs.pop()
+                self.obsubs.append(self.bitmexDatas[1][0]-self.okexDatas[1][0])
+            else:
+                self.obsubs.append(self.bitmexDatas[1][0]-self.okexDatas[1][0])
             print(self.obsubs)
+            return msg
+        return None
         
         
-    def closeOB(self,closeAll = False):#平仓,okex卖出，bitmex买入
+    def closeOB(self,subpurce,closeAll = False,isReset = False):#平仓,okex卖出，bitmex买入
         if closeAll:
             pp = len(self.obsubs)
-            msg = {'type':'cs','amount':self.baseAmount*100*pp,'price':self.bitmexDatas[0][0],'islimit':1}
+            cid = self.crecteOrderCID('bitmex','cs')
+            msg = {'type':'cs','amount':self.baseAmount*100*pp,'price':self.bitmexDatas[0][0],'islimit':1,'cid':cid}
+            self.bCIDData[cid] = {'msg':msg,'state':0}
             if self.sendMsgToBitmexTrade('cs', msg):
-                self.okexTradeMsgs.append({'type':'cl','amount':self.baseAmount*pp})
-                self.obsubs.clear()
+                self.okexTradeMsgs.append({'type':'cl','amount':self.baseAmount*pp,'cid':cid})
+                self.obsubs = []
+                return msg
         else:
-            print(self.obsubs)
-            msg = {'type':'cs','amount':self.baseAmount*100,'price':self.bitmexDatas[0][0],'islimit':1}
+            cid = self.crecteOrderCID('bitmex','cs')
+            msg = {'type':'cs','amount':self.baseAmount*100,'price':self.bitmexDatas[0][0],'islimit':1,'cid':cid}
+            self.bCIDData[cid] = {'msg':msg,'state':0}
             if self.sendMsgToBitmexTrade('cs', msg):
-                self.okexTradeMsgs.append({'type':'cl','amount':self.baseAmount})
-                subprice = self.obsubs.pop()
+                self.okexTradeMsgs.append({'type':'cl','amount':self.baseAmount,'cid':cid})
+                if not isReset:
+                    subprice = self.obsubs.pop()
+                return msg
+            print(self.obsubs)
+        return None
         
 
-    def openBO(self): #开仓,bitmex买入,okex卖出
-        msg = {'type':'ol','amount':self.baseAmount*100,'price':self.bitmexDatas[0][0],'islimit':1}
+    def openBO(self,subpurce,isReset = False): #开仓,bitmex买入,okex卖出
+        cid = self.crecteOrderCID('bitmex','ol')
+        msg = {'type':'ol','amount':self.baseAmount*100,'price':self.bitmexDatas[0][0],'islimit':1,'cid':cid}
+        self.bCIDData[cid] = {'msg':msg,'state':0}
         if self.sendMsgToBitmexTrade('ol', msg):
-            self.okexTradeMsgs.append({'type':'os','amount':self.baseAmount})
-            self.bosubs.append(self.bitmexDatas[0][1]-self.okexDatas[0][0])
+            self.okexTradeMsgs.append({'type':'os','amount':self.baseAmount,'cid':cid})
+            if isReset:
+                self.bosubs.pop()
+                self.bosubs.append(self.bitmexDatas[0][1]-self.okexDatas[0][0])
+            else:
+                self.bosubs.append(self.bitmexDatas[0][1]-self.okexDatas[0][0])
             print(self.bosubs)
+            return msg
+        return None
 
-    def closeBO(self,closeAll = False):#平仓,bitmex卖出,okex买入
+    def closeBO(self,subpurce,closeAll = False,isReset = False):#平仓,bitmex卖出,okex买入
         if closeAll:
             pp =len(self.bosubs)
-            msg = {'type':'cl','amount':self.baseAmount*100*pp,'price':self.bitmexDatas[0][0],'islimit':1}
+            cid = self.crecteOrderCID('bitmex','cl')
+            msg = {'type':'cl','amount':self.baseAmount*100*pp,'price':self.bitmexDatas[0][0],'islimit':1,'cid':cid}
+            self.bCIDData[cid] = {'msg':msg,'state':0}
             if self.sendMsgToBitmexTrade('cl', msg):
-                self.okexTradeMsgs.append({'type':'cs','amount':self.baseAmount*pp})
-                self.bosubs.clear()
+                self.okexTradeMsgs.append({'type':'cs','amount':self.baseAmount*pp,'cid':cid})
+                self.bosubs = []
+                return msg
         else:
-            msg = {'type':'cl','amount':self.baseAmount*100,'price':self.bitmexDatas[0][0],'islimit':1}
+            cid = self.crecteOrderCID('bitmex','cl')
+            msg = {'type':'cl','amount':self.baseAmount*100,'price':self.bitmexDatas[0][0],'islimit':1,'cid':cid}
+            self.bCIDData[cid] = {'msg':msg,'state':0}
             if self.sendMsgToBitmexTrade('cl', msg):
-                self.okexTradeMsgs.append({'type':'cs','amount':self.baseAmount})
-                subprice = self.bosubs.pip()
+                self.okexTradeMsgs.append({'type':'cs','amount':self.baseAmount,'cid':cid})
+                if not isReset:
+                    subprice = self.bosubs.pip()
                 print(self.bosubs)
-
-
+                return msg
+        return None
     #检测是否需要下单
     def tradeTest(self):
         
         lastOBsub = self.lastSub['ob']['subOB']
-        lastBOsub = self.lastSub['ob']['subBO']
+        lastBOsub = self.lastSub['bo']['subBO']
         if lastOBsub <= 0:  #bitmex价格高于okex
             maxprice = self.bitmexDatas[1][0]
             stepprice = maxprice * self.stepPercent
-            if self.openBOCount < 1:
+            print('stepprice=%.2f'%(stepprice))
+            if len(self.obsubs) < 1:
                 if abs(lastOBsub) > stepprice and len(self.obsubs) < 1:
-                    self.openOB()
+                    self.openOB(stepprice)
                 elif abs(lastOBsub) > stepprice*((1+self.stepPercent)^2) and len(self.obsubs) < 2:
-                    self.openOB()
+                    self.openOB(stepprice*((1+self.stepPercent)^2))
                 elif abs(lastOBsub) > stepprice*((1+self.stepPercent)^3) and len(self.obsubs) < 3:
-                    self.openOB()
+                    self.openOB(stepprice*((1+self.stepPercent)^3))
                 elif abs(lastOBsub) > stepprice*((1+self.stepPercent)^4) and len(self.obsubs) < 4:
-                    self.openOB()
+                    self.openOB(stepprice*((1+self.stepPercent)^4))
                 elif abs(lastOBsub) > stepprice*((1+self.stepPercent)^5) and len(self.obsubs) < 5:
-                    self.openOB()
+                    self.openOB(stepprice*((1+self.stepPercent)^5))
                 elif abs(lastOBsub) > stepprice*((1+self.stepPercent)^6) and len(self.obsubs) < 6:
-                    self.openOB()
+                    self.openOB(stepprice*((1+self.stepPercent)^6))
             elif abs(lastOBsub) > stepprice and len(self.bosubs) > 0:
-                self.closeBO(closeAll = True)
+                self.closeBO(stepprice,closeAll = True)
         elif lastBOsub < 0:
             maxprice = self.okexDatas[1][0]
             stepprice = maxprice * self.stepPercent
-            if self.openOBCount < 1:
+            print('stepprice=%.2f'%(stepprice))
+            if len(self.obsubs) < 1:
                 if abs(lastBOsub) > stepprice and len(self.obsubs) < 1:
-                    self.openBO()
+                    self.openBO(stepprice)
                 elif abs(lastBOsub) > stepprice*((1+self.stepPercent)^2) and len(self.obsubs) < 2:
-                    self.openBO()
+                    self.openBO(stepprice*((1+self.stepPercent)^2))
                 elif abs(lastBOsub) > stepprice*((1+self.stepPercent)^3) and len(self.obsubs) < 3:
-                    self.openBO()
+                    self.openBO(stepprice*((1+self.stepPercent)^3))
                 elif abs(lastBOsub) > stepprice*((1+self.stepPercent)^4) and len(self.obsubs) < 4:
-                    self.openBO()
+                    self.openBO(stepprice*((1+self.stepPercent)^4))
                 elif abs(lastBOsub) > stepprice*((1+self.stepPercent)^5) and len(self.obsubs) < 5:
-                    self.openBO()
+                    self.openBO(stepprice*((1+self.stepPercent)^5))
                 elif abs(lastBOsub) > stepprice*((1+self.stepPercent)^6) and len(self.obsubs) < 6:
-                    self.openBO()
+                    self.openBO(stepprice*((1+self.stepPercent)^6))
             elif abs(lastBOsub) > stepprice and len(self.bosubs) > 0:
-                self.closeOB(closeAll = True)
+                self.closeOB(stepprice,closeAll = True)
 
         # "iOkexRate":0.0005,     //okex主动成交费率
         # "pOkexRate":0.0002,     //okex被动成交费率
@@ -341,8 +414,8 @@ class TradeTool(object):
     # 获取定单状态
     # 获取所有定单状态
     # {type:getall}
-    def getAllTrade(self,market):
-        msg = {'type':'getall','id':orderID}
+    def getAllTrade(self,market = 'all'):
+        msg = {'type':'getall'}
         if market == 'all':
             self.sendMsgToOkexTrade('getall', msg)
             self.sendMsgToBitmexTrade('getall', msg)
@@ -394,6 +467,10 @@ class TradeTool(object):
     # {type:withdraw,addr:地址,amount:数量,price:支付手续费,cointype:btc}
     # okex资金划转
     # {type:transfer,amount:数量,from:从那个资金帐户划转,to:划转到那个资金帐户,cointype:btc}
+    def setTradeTest(self,isTest):
+        msg = {'type':'test','test':isTest}
+        self.sendMsgToOkexTrade('test', msg)
+        self.sendMsgToBitmexTrade('test', msg)
     #收到数据   
     #okex数据
 
@@ -435,16 +512,68 @@ class TradeTool(object):
             self.updateDataSub()
             # print(self.buytop,self.selltop)
         elif 'table' in datadic and datadic['table'] == 'execution': #// 个别成交，可能是多个成交
-            print(msg)
+            print('---execution--bitmex--')
+            print(datadic)
         elif 'table' in datadic and datadic['table'] == 'order': #// 你委托的更新
-            print(msg)
+            print('---order--bitmex--')
+            #下单后websocket返回的状态改变数据
+            # {u'action': u'update', u'table': u'order', u'data': [{u'orderID': u'71931c93-340d-9455-bf80-b0ac50797604', u'account': 278343, u'workingIndicator': True, u'timestamp': u'2018-08-12T21:13:37.105Z', u'symbol': u'XBTUSD', u'clOrdID': u''}]}
+            #取消定单时的websocket返回的状态改变数据
+            #{u'action': u'update', u'table': u'order', u'data': [{u'orderID': u'71931c93-340d-9455-bf80-b0ac50797604', u'account': 278343, u'ordStatus': u'Canceled', u'workingIndicator': False, u'text': u'Canceled: Canceled via API.\nSubmitted via API.', u'symbol': u'XBTUSD', u'leavesQty': 0, u'simpleLeavesQty': 0, u'timestamp': u'2018-08-12T21:15:44.581Z', u'clOrdID': u''}]}
+            print(datadic)
+            if 'ordStatus' in datadic['data'] and datadic['data']['ordStatus'] == 'Canceled':#定单已取消
+                self.onBitmexOrderCancelOK(datadic['data'])
+            elif 'ordStatus' not in datadic['data'] and datadic['data']['workingIndicator']:
+                self.onBitmexOrderOnline(datadic['data']) #定单成功委托
         elif 'table' in datadic and datadic['table'] == 'margin': #你账户的余额和保证金要求的更新
-            print(msg)
+            print('---margin--bitmex--')
+            print(datadic)
         elif 'table' in datadic and datadic['table'] == 'position': #// 你仓位的更新
-            print(msg)
+            print('---position--bitmex--')
+            print(datadic)
         else:
+            print('---other--bitmex--')
             print(datadic)
         self.lastimedic['bd'] = int(time.time())
+
+    #当下单已成功委托
+    def onBitmexOrderOnline(self,data):
+        self.bCIDData[data['clOrdID']]['state'] = 1
+    #当bitmex下单完全成交
+    def onBitmexTradeOK(self,data):
+        self.bCIDData[data['clOrdID']]['state'] = 2
+        ptype = self.okexTradeMsgs.pop(0)
+        ocid = data['clOrdID']
+        if ptype == 'ol':
+            msg = {'type':'ol','amount':self.baseAmount,'price':self.okexDatas[1][0],'islimit':1,'cid':ocid}
+            self.oCIDData = {'msg':msg,'state':0}
+            self.sendMsgToOkexTrade('ol', msg)
+        elif ptype == 'os':
+            msg = {'type':'os','amount':self.baseAmount,'price':self.okexDatas[0][0],'islimit':1,'cid':ocid}
+            self.oCIDData = {'msg':msg,'state':0}
+            self.sendMsgToOkexTrade('os', msg)
+        elif ptype == 'cl':
+            msg = {'type':'cl','amount':self.baseAmount,'price':self.okexDatas[0][0],'islimit':1,'cid':ocid}
+            self.oCIDData = {'msg':msg,'state':0}
+            self.sendMsgToOkexTrade('cl', msg)
+        elif ptype == 'cs':
+            msg = {'type':'cs','amount':self.baseAmount,'price':self.okexDatas[1][0],'islimit':1,'cid':ocid}
+            self.oCIDData = {'msg':msg,'state':0}
+            self.sendMsgToOkexTrade('cs', msg)
+    #当bitmex定单取消成功
+    def onBitmexOrderCancelOK(self,data):
+        tmpobj = self.bCIDData.pop(data['clOrdID'])
+        msg = tmpobj['msg']
+        deln  = -1
+        for n in range(len(self.okexTradeMsgs)):
+            d = self.okexTradeMsgs[n]
+            if d['cid'] == msg['cid']:
+                deln = n
+                break
+        if deln >= 0:
+            self.okexTradeMsgs.pop(deln)
+
+    #bitmex下单服务器反回下单情况
     def onBitmexTradeBack(self,datadic):
         if 'type' in datadic and datadic['type'] == 'pong':
             self.socketstate['bt'] = True
@@ -455,6 +584,8 @@ class TradeTool(object):
         self.lastimedic['bt'] = int(time.time())
 
 
+    
+    # self.initBitmexDataSocket()
     def sendMsgToBitmexData(self,ptype,msg,isSigned = False):
         try:
             if self.bitmexDataSocket:
@@ -471,11 +602,13 @@ class TradeTool(object):
                 return True
             else:
                 print("没有bitmexDataSocket客户端连接")
+                self.initBitmexDataSocket()
                 return False
         except Exception as e:
             print('服务器端bitmexDataSocket网络错误1')
             return False
 
+    # self.initBitmexTradeSocket()
     def sendMsgToBitmexTrade(self,ptype,msg,isSigned = False):
         try:
             if self.bitmexTradeSocket:
@@ -492,11 +625,13 @@ class TradeTool(object):
                 return True
             else:
                 print("没有bitmexTradeSocket客户端连接")
+                self.initBitmexTradeSocket()
                 return False
         except Exception as e:
             print('服务器端bitmexTradeSocket网络错误1')
             return False
-
+    
+    # self.initOkexDataSocket()
     def sendMsgToOkexData(self,ptype,msg,isSigned = False):
         try:
             if self.okexDataSocket:
@@ -513,11 +648,13 @@ class TradeTool(object):
                 return True
             else:
                 print("没有okexDataSocket客户端连接")
+                self.initOkexDataSocket()
                 return False
         except Exception as e:
             print('服务器端okexDataSocket网络错误1')
             return False
 
+    # self.initOkexTradeSocket()
     def sendMsgToOkexTrade(self,ptype,msg,isSigned = False):
         try:
             if self.okexTradeSocket:
@@ -534,6 +671,7 @@ class TradeTool(object):
                 return True
             else:
                 print("没有okexDataSocket客户端连接")
+                self.initOkexTradeSocket()
                 return False
         except Exception as e:
             print('服务器端okexDataSocket网络错误1')

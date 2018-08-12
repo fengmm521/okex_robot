@@ -51,8 +51,14 @@ class WsTool(object):
         #     ws.send(jstr)
         # thread.start_new_thread(run, ())
 
+def test():
+    import datetime
 
-if __name__ == "__main__":
+    dat = datetime.datetime(2000,1,1,8,0)
+    print(dat)
+
+
+def main():
     websocket.enableTrace(True)
     ws = websocket.WebSocketApp("wss://real.okex.com:10440/websocket/okexapi",
                               on_message = on_message,
@@ -60,5 +66,8 @@ if __name__ == "__main__":
                               on_close = on_close)
     ws.on_open = on_open
     ws.run_forever()
+
+if __name__ == "__main__":
+    test()
 
     

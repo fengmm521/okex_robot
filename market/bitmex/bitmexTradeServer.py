@@ -67,9 +67,6 @@ class Servers(socketserver.StreamRequestHandler):
             if not data: 
                 break
             data = data.decode()
-            print('data len:%d'%(len(data)))
-            print("RECV from ", self.client_address)
-            print(data)
             dicdata = json.loads(data)
             #来自其他服务器的数据要求验证签名
             #数据格式:{"type":消息类型,"sign":sha256的data转为字符串的签名,"time":时间戳用来确定发送时间和验证签名,"data":{消息正文内容}}
@@ -79,6 +76,9 @@ class Servers(socketserver.StreamRequestHandler):
             if dicdata['type'] == 'ping':
                 self.request.send('{"type":"pong","erro":"0"}'.encode())
             elif signTool.isSignOK(dicdata,tradetool.secret):
+                print('data len:%d'%(len(data)))
+                print("RECV from ", self.client_address)
+                print(data)
                 tradetool.onTradeMsg(dicdata['data'])
             else:
                 self.request.send('{"erro":"signErro"}'.encode())

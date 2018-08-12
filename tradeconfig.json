@@ -1,0 +1,11 @@
+{
+    "iOkexRate":0.0005,     
+    "pOkexRate":0.0002,     
+    "iBiemexRate":0.00075,  
+    "pBiemexRate":-0.00025,  
+    "stepPercent":4,        
+    "movePercent":0.6,      
+    "normTime":3,           
+    "reconfigTime":60,      
+    "baseAmount":1          
+}

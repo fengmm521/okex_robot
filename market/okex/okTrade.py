@@ -31,13 +31,13 @@ class OKFuture:
     
 
     # 开多,
-    # {type:ol,amount:100,price:100,islimit:1}
+    # {type:ol,amount:100,price:100,islimit:1,cid:clientorderid}
     # 平多,
-    # {type:cl,amount:100,price:100,islimit:1}
+    # {type:cl,amount:100,price:100,islimit:1,cid:clientorderid}
     # 开空,
-    # {type:os,amount:100,price:100,islimit:1}
+    # {type:os,amount:100,price:100,islimit:1,cid:clientorderid}
     # 平空
-    # {type:cs,amount:100,price:100,islimit:1}
+    # {type:cs,amount:100,price:100,islimit:1,cid:clientorderid}
 
     # 获取定单状态
     # 获取所有定单状态
@@ -64,7 +64,7 @@ class OKFuture:
                 logstr = '测试开多，数量:%d,价格:%.2f,是否限价单:%d'%(msgdic['amount'],msgdic['price'],msgdic['islimit'])
                 print(logstr)
                 self.saveLog(logstr)
-                bcmsg = 'test'
+                bcmsg = '{"test":"ol"}'
             else:
                 pmatchPrice = '0'
                 if msgdic['islimit'] == 0:
@@ -74,6 +74,7 @@ class OKFuture:
             if self.isTest:
                 logstr = '测试平多，数量:%d,价格:%.2f,是否限价单:%d'%(msgdic['amount'],msgdic['price'],msgdic['islimit'])
                 print(logstr)
+                bcmsg = '{"test":"cl"}'
                 self.saveLog(logstr)
             else:
                 pmatchPrice = '0'
@@ -85,6 +86,7 @@ class OKFuture:
             if self.isTest:
                 logstr = '测试开空，数量:%d,价格:%.2f,是否限价单:%d'%(msgdic['amount'],msgdic['price'],msgdic['islimit'])
                 print(logstr)
+                bcmsg = '{"test":"os"}'
                 self.saveLog(logstr)
             else:
                 pmatchPrice = '0'
@@ -97,6 +99,7 @@ class OKFuture:
                 logstr = '测试平空，数量:%d,价格:%.2f,是否限价单:%d'%(msgdic['amount'],msgdic['price'],msgdic['islimit'])
                 print(logstr)
                 self.saveLog(logstr)
+                bcmsg = '{"test":"cs"}'
             else:
                 pmatchPrice = '0'
                 if msgdic['islimit'] == 0:
@@ -141,7 +144,13 @@ class OKFuture:
             # pass
         elif msgdic['type'] == 'account':#获取帐户信息,帐户权益和保证金率,主要是看会不会全仓爆仓
             # pass
-            bcmsg = self.future_userinfo()
+            bctmpmsg = self.future_userinfo()
+            dicttmp = json.loads(bctmpmsg)
+            if dicttmp['result']:
+                bcmsg = bctmpmsg
+            elif 'error_code' in dicttmp and dicttmp['error_code'] == 20022:
+                bcmsg = self.future_userinfo_4fix()
+
         elif msgdic['type'] == 'withdraw':#提现
             if self.isTest:
                 bcmsg = 'test_withdraw'
@@ -153,13 +162,13 @@ class OKFuture:
             # okex资金划转
             # {type:transfer,amount:数量,from:从那个资金帐户划转,to:划转到那个资金帐户,cointype:btc}
             pass #合约这里没有这个接口，在要现在货中调用
-        elif msgdict['type'] == 'test':
-            self.isTest = bool(msgdict['test'])
-            bcmsg = 'setTest:%d'%(self.isTest)
-        elif msgdict['type'] == 'funding':#bitmex获取持仓费率,
+        elif msgdic['type'] == 'test':
+            self.isTest = bool(msgdic['test'])
+            bcmsg = '{"okex_setTest":%d}'%(self.isTest)
+        elif msgdic['type'] == 'funding':#bitmex获取持仓费率,
             pass #okex没有永续合约，所以没有持仓费问题
         print(bcmsg)
-        self.sendMsgToClient(str(bcmsg))
+        self.sendMsgToClient(bcmsg.encode())
     #期货全仓账户信息
     def future_userinfo(self):
         FUTURE_USERINFO = "/api/v1/future_userinfo.do?"
@@ -318,7 +327,43 @@ class OKFuture:
         return httpPost(self.__url,FUTURE_POSITION_4FIX,params)
 
 
+def test():
+    import os,sys
+    from sys import version_info  
+    if version_info.major < 3:
+        import SocketServer as socketserver
+        magetoolpth = '/usr/local/lib/python2.7/site-packages'
+        if magetoolpth not in sys.path:
+            sys.path.append(magetoolpth)
+        else:
+            print('heave magetool pth')
+    else:
+        import socketserver
+        
+    import socket
+    import json
 
+    from magetool import pathtool
+
+    nfpth = os.path.abspath(__file__)
+    ndir,_ = os.path.split(nfpth)
+    pdir = pathtool.GetParentPath(ndir)
+    ppdir = pathtool.GetParentPath(pdir) + os.sep + 'util'
+    sys.path.append(ppdir)
+    import apikeytool
+    url = apikeytool.apikeydic['okex']['url']
+    apikey = apikeytool.apikeydic['okex']['apikey']
+    secretkey = apikeytool.apikeydic['okex']['secretkey']
+    isTest =  bool(apikeytool.apikeydic['isTest'])
+
+    tradetool = OKFuture(url, apikey, secretkey,isTest)
+    tradetool.setObjName('okex')
+
+    bcmsg = tradetool.future_orderinfo(symbol = 'btc_usd', contractType = 'quarter', orderId = '-1', status = '1', currentPage = '1', pageLength = '20')
+    print(bcmsg.encode())
+    print(type(bcmsg.encode()))
+if __name__ == '__main__':
+    test()
 
 
 
