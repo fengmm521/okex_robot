@@ -7,5 +7,5 @@
     "movePercent":0.6,      //网格滑动价格在网络价格的比例
     "normTime":3,           //基准价格重新计算时间,单位:小时
     "reconfigTime":60,       //配置文件检测刷新时间，单位:秒
-    "baseAmount":1
+    "baseAmount":1           //单次下单量
 }

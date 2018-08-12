@@ -41,7 +41,6 @@ class BitMexFuture:
                 print("没有客户端连接")
         except Exception as e:
             print('客户端网络错误')
-
     #收到来自数据分析客户端的下单请求
     def onTradeMsg(self,msgdict):
         #{'type':'os','amount':0,'postOnly':1}
@@ -85,6 +84,7 @@ class BitMexFuture:
             # self.baseAmount = msgdict['amount']
             if self.isTest:
                 bcmsg = 'bimex_test_ol'
+
             else:
                 bcmsg = self.future_trade_xbtusd(msgdict['price'], msgdict['amount'],'ol',bool(msgdict['islimit']))
             savestr = 'ol,price:%.1f,amount:%d,islimit:%d,bc:'%(msgdict['price'],msgdict['amount'],msgdict['islimit']) + str(bcmsg)

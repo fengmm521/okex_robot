@@ -19,6 +19,10 @@ class OKFuture:
     def setSocketClient(self,clientSocket):
         self.csocket = clientSocket
 
+    def saveLog(self,msg):
+        f = open('oktradelog.txt','a')
+        f.write(msg + '\n')
+        f.close()
     #收到数据处理端的下单消息
     def onTradeMsg(self,msgdic):
     # 下单数据格式:
@@ -57,7 +61,9 @@ class OKFuture:
 
         if msgdic['type'] == 'ol':#开多
             if self.isTest:
-                print('测试开多，数量:%d,价格:%.2f,是否限价单:%d'%(msgdic['amount'],msgdic['price'],msgdic['islimit']))
+                logstr = '测试开多，数量:%d,价格:%.2f,是否限价单:%d'%(msgdic['amount'],msgdic['price'],msgdic['islimit'])
+                print(logstr)
+                self.saveLog(logstr)
                 bcmsg = 'test'
             else:
                 pmatchPrice = '0'
@@ -66,7 +72,9 @@ class OKFuture:
                 bcmsg = self.future_trade(symbol = 'btc_usd', contractType = 'quarter',price='%.2f'%(msgdic['price']),amount = str(msgdic['amount']),tradeType = '1',matchPrice = pmatchPrice)
         elif msgdic['type'] == 'cl':#平多
             if self.isTest:
-                print('测试平多，数量:%d,价格:%.2f,是否限价单:%d'%(msgdic['amount'],msgdic['price'],msgdic['islimit']))
+                logstr = '测试平多，数量:%d,价格:%.2f,是否限价单:%d'%(msgdic['amount'],msgdic['price'],msgdic['islimit'])
+                print(logstr)
+                self.saveLog(logstr)
             else:
                 pmatchPrice = '0'
                 if msgdic['islimit'] == 0:
@@ -75,7 +83,9 @@ class OKFuture:
 
         elif msgdic['type'] == 'os':#开空
             if self.isTest:
-                print('测试开空，数量:%d,价格:%.2f,是否限价单:%d'%(msgdic['amount'],msgdic['price'],msgdic['islimit']))
+                logstr = '测试开空，数量:%d,价格:%.2f,是否限价单:%d'%(msgdic['amount'],msgdic['price'],msgdic['islimit'])
+                print(logstr)
+                self.saveLog(logstr)
             else:
                 pmatchPrice = '0'
                 if msgdic['islimit'] == 0:
@@ -84,7 +94,9 @@ class OKFuture:
 
         elif msgdic['type'] == 'cs':#平空
             if self.isTest:
-                print('测试平空，数量:%d,价格:%.2f,是否限价单:%d'%(msgdic['amount'],msgdic['price'],msgdic['islimit']))
+                logstr = '测试平空，数量:%d,价格:%.2f,是否限价单:%d'%(msgdic['amount'],msgdic['price'],msgdic['islimit'])
+                print(logstr)
+                self.saveLog(logstr)
             else:
                 pmatchPrice = '0'
                 if msgdic['islimit'] == 0:
