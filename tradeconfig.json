@@ -3,7 +3,7 @@
     "pOkexRate":0.0002,     
     "iBiemexRate":0.00075,  
     "pBiemexRate":-0.00025,  
-    "stepPercent":4,        
+    "stepPercent":4.5,        
     "movePercent":0.6,      
     "normTime":3,           
     "reconfigTime":60,      

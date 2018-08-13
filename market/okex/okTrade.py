@@ -69,7 +69,7 @@ class OKFuture:
                 pmatchPrice = '0'
                 if msgdic['islimit'] == 0:
                     pmatchPrice = '1' #对手价，即市价下单
-                bcmsg = self.future_trade(symbol = 'btc_usd', contractType = 'quarter',price='%.2f'%(msgdic['price']),amount = str(msgdic['amount']),tradeType = '1',matchPrice = pmatchPrice)
+                bcmsg = self.future_trade(symbol = 'btc_usd', contractType = 'quarter',price='{:g}'.format(msgdic['price']),amount = str(msgdic['amount']),tradeType = '1',matchPrice = pmatchPrice,leverRate='20')
         elif msgdic['type'] == 'cl':#平多
             if self.isTest:
                 logstr = '测试平多，数量:%d,价格:%.2f,是否限价单:%d'%(msgdic['amount'],msgdic['price'],msgdic['islimit'])
@@ -80,7 +80,7 @@ class OKFuture:
                 pmatchPrice = '0'
                 if msgdic['islimit'] == 0:
                     pmatchPrice = '1' #对手价，即市价下单
-                bcmsg = self.future_trade(symbol = 'btc_usd', contractType = 'quarter',price='%.2f'%(msgdic['price']),amount = str(msgdic['amount']),tradeType = '3',matchPrice = pmatchPrice)
+                bcmsg = self.future_trade(symbol = 'btc_usd', contractType = 'quarter',price='{:g}'.format(msgdic['price']),amount = str(msgdic['amount']),tradeType = '3',matchPrice = pmatchPrice,leverRate='20')
 
         elif msgdic['type'] == 'os':#开空
             if self.isTest:
@@ -92,7 +92,7 @@ class OKFuture:
                 pmatchPrice = '0'
                 if msgdic['islimit'] == 0:
                     pmatchPrice = '1' #对手价，即市价下单
-                bcmsg = self.future_trade(symbol = 'btc_usd', contractType = 'quarter',price='%.2f'%(msgdic['price']),amount = str(msgdic['amount']),tradeType = '2',matchPrice = pmatchPrice)
+                bcmsg = self.future_trade(symbol = 'btc_usd', contractType = 'quarter',price='{:g}'.format(msgdic['price']),amount = str(msgdic['amount']),tradeType = '2',matchPrice = pmatchPrice,leverRate='20')
 
         elif msgdic['type'] == 'cs':#平空
             if self.isTest:
@@ -104,7 +104,7 @@ class OKFuture:
                 pmatchPrice = '0'
                 if msgdic['islimit'] == 0:
                     pmatchPrice = '1' #对手价，即市价下单
-                bcmsg = self.future_trade(symbol = 'btc_usd', contractType = 'quarter',price='%.2f'%(msgdic['price']),amount = str(msgdic['amount']),tradeType = '4',matchPrice = pmatchPrice)
+                bcmsg = self.future_trade(symbol = 'btc_usd', contractType = 'quarter',price='{:g}'.format(msgdic['price']),amount = str(msgdic['amount']),tradeType = '4',matchPrice = pmatchPrice,leverRate='20')
 
         elif msgdic['type'] == 'getall':#获取所有未成交定单，这里主要是看还有多少未成交的
             # 获取所有定单状态

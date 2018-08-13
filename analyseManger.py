@@ -92,6 +92,9 @@ class TradeTool(object):
         ptime = int(time.time())
         self.lastimedic = {'bd':ptime,'bt':ptime,'od':ptime,'ot':ptime}
 
+
+        self.isShowLog = True
+
         self.okexDatas = []             #买一价，卖一价，接收数据时间
         self.bitmexDatas = []           #买一价，卖一价, 接收数据时间
         self.lastSub = {}               #okex的卖一价和bitmex的买一价的差价，bitmex的卖一价和okex的买一价的差价,时间差,最后接收时间
@@ -110,6 +113,9 @@ class TradeTool(object):
         self.oCIDData = {}
 
         self.initSocket()
+
+    def setLogShow(self,isShowLog):
+        self.isShowLog = isShowLog
 
     def initSocket(self):
         self.initOkexTradeSocket()
@@ -241,7 +247,8 @@ class TradeTool(object):
             self.lastSub['btime'] = self.bitmexDatas[2]
             self.lastSub['subtime'] = self.okexDatas[2] - self.bitmexDatas[2]
             # print('-'*20)
-            print('ob:',round(self.lastSub['ob']['subOB'],3),self.lastSub['ob']['odeep'],self.lastSub['ob']['bdeep'],'bo:',round(self.lastSub['bo']['subBO'],3),self.lastSub['bo']['odeep'],self.lastSub['bo']['bdeep'],self.lastSub['subtime'])
+            if self.isShowLog:
+                print('ob:',round(self.lastSub['ob']['subOB'],3),self.lastSub['ob']['odeep'],self.lastSub['ob']['bdeep'],'bo:',round(self.lastSub['bo']['subBO'],3),self.lastSub['bo']['odeep'],self.lastSub['bo']['bdeep'],self.lastSub['subtime'])
             self.tradeTest()
     #初始化交易参数,如单次下单合约值，谁主动成交，谁被动成交,交易手续费等
     def initTraddeConfig(self,conf):
@@ -354,7 +361,8 @@ class TradeTool(object):
         if lastOBsub <= 0:  #bitmex价格高于okex
             maxprice = self.bitmexDatas[1][0]
             stepprice = maxprice * self.stepPercent
-            print('stepprice=%.2f'%(stepprice))
+            if self.isShowLog:
+                print('stepprice=%.2f'%(stepprice))
             if len(self.obsubs) < 1:
                 if abs(lastOBsub) > stepprice and len(self.obsubs) < 1:
                     self.openOB(stepprice)
@@ -373,7 +381,8 @@ class TradeTool(object):
         elif lastBOsub < 0:
             maxprice = self.okexDatas[1][0]
             stepprice = maxprice * self.stepPercent
-            print('stepprice=%.2f'%(stepprice))
+            if self.isShowLog:
+                print('stepprice=%.2f'%(stepprice))
             if len(self.obsubs) < 1:
                 if abs(lastBOsub) > stepprice and len(self.obsubs) < 1:
                     self.openBO(stepprice)
@@ -486,7 +495,143 @@ class TradeTool(object):
             self.okexDatas = [self.buys5[0],self.sells5[0],int(time.time())]             #买一价，卖一价，接收数据时间
             self.updateDataSub()
             # print(self.buys5[0],self.sells5[0])
-        else:
+        
+        elif type(datadic) == list and 'channel' in datadic[0] and datadic[0]['channel'] == 'ok_sub_futureusd_trades':
+            #合约定单数据更新
+# amount(double): 委托数量
+# contract_name(string): 合约名称
+# created_date(long): 委托时间
+# create_date_str(string):委托时间字符串
+# deal_amount(double): 成交数量
+# fee(double): 手续费
+# order_id(long): 订单ID
+# price(double): 订单价格
+# price_avg(double): 平均价格
+# status(int): 订单状态(0等待成交 1部分成交 2全部成交 -1撤单 4撤单处理中)
+# symbol(string): btc_usd   ltc_usd   eth_usd   etc_usd   bch_usd
+# type(int): 订单类型 1：开多 2：开空 3：平多 4：平空
+# unit_amount(double):合约面值
+# lever_rate(double):杠杆倍数  value:10/20  默认10
+# system_type(int):订单类型 0:普通 1:交割 2:强平 4:全平 5:系统反单
+        # [{u'binary': 0, u'data': 
+        #{u'orderid': 1270246017934336, 
+        #u'contract_name': u'BTC0928', 
+        #u'fee': 0.0, 
+        #u'user_id': 2051526, 
+        #u'contract_id': 201809280000012, 
+        #u'price': 1000.0, 
+        #u'create_date_str': u'2018-08-13 08:00:16', 
+        #u'amount': 1.0, 
+        #u'status': 0, 
+        #u'system_type': 0, 
+        #u'unit_amount': 100.0, 
+        #u'price_avg': 0.0, 
+        #u'contract_type': u'quarter', 
+        #u'create_date': 1534118416047, 
+        #u'lever_rate': 20.0, 
+        #u'type': 1, 
+        #u'deal_amount': 0.0}, 
+        #u'channel': u'ok_sub_futureusd_trades'}]
+            print(datadic)
+        
+        elif type(datadic) == list and 'channel' in datadic[0] and datadic[0]['channel'] == 'ok_sub_futureusd_userinfo':
+            #用户帐户数据更新
+# 全仓信息
+# balance(double): 账户余额
+# symbol(string)：币种
+# keep_deposit(double)：保证金
+# profit_real(double)：已实现盈亏
+# unit_amount(int)：合约价值
+# 逐仓信息
+# balance(double):账户余额
+# available(double):合约可用
+# balance(double):合约余额
+# bond(double):固定保证金
+# contract_id(long):合约ID
+# contract_type(string):合约类别
+# freeze(double):冻结
+# profit(double):已实现盈亏
+# unprofit(double):未实现盈亏
+# rights(double):账户权益
+        #[{u'binary': 0,
+        # u'data': {
+            #u'contracts': [
+                #{u'available': 0.01223452, 
+                #u'bond': 0.0, 
+                #u'contract_id': 201809280000012, 
+                #u'profit': 0.0, 
+                #u'freeze': 0.005, 
+                #u'long_order_amount': 0.0, 
+                #u'short_order_amount': 0.0, 
+                #u'balance': 0.0, 
+                #u'pre_short_order_amount': 0.0, 
+                #u'pre_long_order_amount': 1.0}], 
+            #u'symbol': u'btc_usd',
+            # u'balance': 0.01723452},
+        # u'channel': u'ok_sub_futureusd_userinfo'}]
+            print(datadic)
+    
+        elif type(datadic) == list and 'channel' in datadic[0] and datadic[0]['channel'] == 'ok_sub_futureusd_positions':
+            #ok_sub_futureusd_positions,仓位数据更新
+# 全仓说明
+# position(string): 仓位 1多仓 2空仓
+# contract_name(string): 合约名称
+# costprice(string): 开仓价格
+# bondfreez(string): 当前合约冻结保证金
+# avgprice(string): 开仓均价
+# contract_id(long): 合约id
+# position_id(long): 仓位id
+# hold_amount(string): 持仓量
+# eveningup(string): 可平仓量
+# margin(double): 固定保证金
+# realized(double):已实现盈亏
+
+# 逐仓说明
+# contract_id(long): 合约id
+# contract_name(string): 合约名称
+# avgprice(string): 开仓均价
+# balance(string): 合约账户余额
+# bondfreez(string): 当前合约冻结保证金
+# costprice(string): 开仓价格
+# eveningup(string): 可平仓量
+# forcedprice(string): 强平价格
+# position(string): 仓位 1多仓 2空仓
+# profitreal(string): 已实现盈亏
+# fixmargin(double): 固定保证金
+# hold_amount(string): 持仓量
+# lever_rate(double): 杠杆倍数
+# position_id(long): 仓位id
+# symbol(string): btc_usd   ltc_usd   eth_usd   etc_usd   bch_usd  eos_usd  xrp_usd btg_usd 
+# user_id(long):用户ID
+    #[{u'binary': 0, u'data': 
+        #{u'positions': 
+            #[{u'contract_name': u'BTC0928',
+            # u'balance': 0.0, u'contract_id': 201809280000012, 
+            #u'fixmargin': 0, u'position_id': 1157028442213376, 
+            #u'avgprice': 0, u'eveningup': 0, u'profitreal': 0.0,
+            # u'hold_amount': 0, u'costprice': 0, 
+            #u'position': 1, u'lever_rate': 10, 
+            #u'bondfreez': 0.005, u'forcedprice': 0}, 
+        #{u'contract_name': u'BTC0928', u'balance': 0.0, 
+            #u'contract_id': 201809280000012, u'fixmargin': 0, 
+            #u'position_id': 1157028442213376, u'avgprice': 0, 
+            #u'eveningup': 0, u'profitreal': 0.0, u'hold_amount': 0, 
+            #u'costprice': 0, u'position': 2, u'lever_rate': 10, 
+            #u'bondfreez': 0.005, u'forcedprice': 0}, 
+        #{u'contract_name': u'BTC0928', u'balance': 0.0, 
+            #u'contract_id': 201809280000012, u'fixmargin': 0.0, 
+            #u'position_id': 1157028442213376, u'avgprice': 7070.17, 
+            #u'eveningup': 0.0, u'profitreal': 0.0, u'hold_amount': 0.0, 
+            #u'costprice': 7070.17, u'position': 1, u'lever_rate': 20, 
+            #u'bondfreez': 0.005, u'forcedprice': 0.0}, 
+        #{u'contract_name': u'BTC0928', u'balance': 0.0, 
+            #u'contract_id': 201809280000012, u'fixmargin': 0.0, 
+            #u'position_id': 1157028442213376, u'avgprice': 7834.0, 
+            #u'eveningup': 0.0, u'profitreal': 0.0, u'hold_amount': 0.0, 
+            #u'costprice': 7834.0, u'position': 2, u'lever_rate': 20,
+            # u'bondfreez': 0.005, u'forcedprice': 0.0}], u'symbol': u'btc_usd',
+            # u'user_id': 2051526}, 
+    #u'channel': u'ok_sub_futureusd_positions'}]
             print(datadic)
         self.lastimedic['od'] = int(time.time())
     #交易下单返回状态
@@ -516,15 +661,18 @@ class TradeTool(object):
             print(datadic)
         elif 'table' in datadic and datadic['table'] == 'order': #// 你委托的更新
             print('---order--bitmex--')
+            # {u'action': u'insert', u'table': u'order', u'data': [{u'ordStatus': u'New', u'exDestination': u'XBME', u'text': u'Submitted via API.', u'timeInForce': u'GoodTillCancel', u'currency': u'USD', u'pegPriceType': u'', u'simpleLeavesQty': 0.0158, u'ordRejReason': u'', u'transactTime': u'2018-08-12T23:02:44.540Z', u'clOrdID': u'os-2-1534114964.188801', u'settlCurrency': u'XBt', u'cumQty': 0, u'displayQty': None, u'avgPx': None, u'price': 6340, u'simpleOrderQty': None, u'contingencyType': u'', u'triggered': u'', u'timestamp': u'2018-08-12T23:02:44.540Z', u'symbol': u'XBTUSD', u'pegOffsetValue': None, u'execInst': u'ParticipateDoNotInitiate', u'simpleCumQty': 0, u'orderID': u'13c79094-518a-c95b-fd95-3f090d339e6e', u'multiLegReportingType': u'SingleSecurity', u'account': 278343, u'stopPx': None, u'leavesQty': 100, u'orderQty': 100, u'workingIndicator': False, u'ordType': u'Limit', u'clOrdLinkID': u'', u'side': u'Sell'}]}
             #下单后websocket返回的状态改变数据
             # {u'action': u'update', u'table': u'order', u'data': [{u'orderID': u'71931c93-340d-9455-bf80-b0ac50797604', u'account': 278343, u'workingIndicator': True, u'timestamp': u'2018-08-12T21:13:37.105Z', u'symbol': u'XBTUSD', u'clOrdID': u''}]}
             #取消定单时的websocket返回的状态改变数据
             #{u'action': u'update', u'table': u'order', u'data': [{u'orderID': u'71931c93-340d-9455-bf80-b0ac50797604', u'account': 278343, u'ordStatus': u'Canceled', u'workingIndicator': False, u'text': u'Canceled: Canceled via API.\nSubmitted via API.', u'symbol': u'XBTUSD', u'leavesQty': 0, u'simpleLeavesQty': 0, u'timestamp': u'2018-08-12T21:15:44.581Z', u'clOrdID': u''}]}
             print(datadic)
-            if 'ordStatus' in datadic['data'] and datadic['data']['ordStatus'] == 'Canceled':#定单已取消
-                self.onBitmexOrderCancelOK(datadic['data'])
-            elif 'ordStatus' not in datadic['data'] and datadic['data']['workingIndicator']:
-                self.onBitmexOrderOnline(datadic['data']) #定单成功委托
+            if 'ordStatus' in datadic['data'][0] and datadic['data'][0]['ordStatus'] == 'Canceled':#定单已取消
+                self.onBitmexOrderCancelOK(datadic['data'][0])
+            elif 'ordStatus' not in datadic['data'][0] and datadic['data'][0]['workingIndicator']:
+                self.onBitmexOrderOnline(datadic['data'][0]) #定单成功委托
+            elif datadic['action'] == 'insert':#新增定单
+                self.onBitmexOrderStart(datadic['data'][0])
         elif 'table' in datadic and datadic['table'] == 'margin': #你账户的余额和保证金要求的更新
             print('---margin--bitmex--')
             print(datadic)
@@ -536,42 +684,60 @@ class TradeTool(object):
             print(datadic)
         self.lastimedic['bd'] = int(time.time())
 
+    #bitmex新增加定单委托
+    def onBitmexOrderStart(self,data):
+        if data['ordStatus'] == 'New':
+            print('新增定单,cid:%s'%(data['clOrdID']))
+            if data['ordStatus']['workingIndicator']:
+                self.onBitmexOrderOnline(data) #定单已成功委托
     #当下单已成功委托
     def onBitmexOrderOnline(self,data):
-        self.bCIDData[data['clOrdID']]['state'] = 1
+        if data['clOrdID'] in self.bCIDData:
+            self.bCIDData[data['clOrdID']]['state'] = 1
+        else:
+            print("非交易对下单，已成功委托的定单ID为bitmex下单服务器自动生成,")
+            print(data)
     #当bitmex下单完全成交
     def onBitmexTradeOK(self,data):
-        self.bCIDData[data['clOrdID']]['state'] = 2
-        ptype = self.okexTradeMsgs.pop(0)
-        ocid = data['clOrdID']
-        if ptype == 'ol':
-            msg = {'type':'ol','amount':self.baseAmount,'price':self.okexDatas[1][0],'islimit':1,'cid':ocid}
-            self.oCIDData = {'msg':msg,'state':0}
-            self.sendMsgToOkexTrade('ol', msg)
-        elif ptype == 'os':
-            msg = {'type':'os','amount':self.baseAmount,'price':self.okexDatas[0][0],'islimit':1,'cid':ocid}
-            self.oCIDData = {'msg':msg,'state':0}
-            self.sendMsgToOkexTrade('os', msg)
-        elif ptype == 'cl':
-            msg = {'type':'cl','amount':self.baseAmount,'price':self.okexDatas[0][0],'islimit':1,'cid':ocid}
-            self.oCIDData = {'msg':msg,'state':0}
-            self.sendMsgToOkexTrade('cl', msg)
-        elif ptype == 'cs':
-            msg = {'type':'cs','amount':self.baseAmount,'price':self.okexDatas[1][0],'islimit':1,'cid':ocid}
-            self.oCIDData = {'msg':msg,'state':0}
-            self.sendMsgToOkexTrade('cs', msg)
+        if data['clOrdID'] in self.bCIDData:
+            self.bCIDData[data['clOrdID']]['state'] = 2
+            ptype = self.okexTradeMsgs.pop(0)
+            ocid = data['clOrdID']
+            if ptype == 'ol':
+                msg = {'type':'ol','amount':self.baseAmount,'price':self.okexDatas[1][0],'islimit':1,'cid':ocid}
+                self.oCIDData = {'msg':msg,'state':0}
+                self.sendMsgToOkexTrade('ol', msg)
+            elif ptype == 'os':
+                msg = {'type':'os','amount':self.baseAmount,'price':self.okexDatas[0][0],'islimit':1,'cid':ocid}
+                self.oCIDData = {'msg':msg,'state':0}
+                self.sendMsgToOkexTrade('os', msg)
+            elif ptype == 'cl':
+                msg = {'type':'cl','amount':self.baseAmount,'price':self.okexDatas[0][0],'islimit':1,'cid':ocid}
+                self.oCIDData = {'msg':msg,'state':0}
+                self.sendMsgToOkexTrade('cl', msg)
+            elif ptype == 'cs':
+                msg = {'type':'cs','amount':self.baseAmount,'price':self.okexDatas[1][0],'islimit':1,'cid':ocid}
+                self.oCIDData = {'msg':msg,'state':0}
+                self.sendMsgToOkexTrade('cs', msg)
+        else:
+            print("非交易对下单，完全成交的定单ID为bitmex下单服务器自动生成,")
+            print(data)
     #当bitmex定单取消成功
     def onBitmexOrderCancelOK(self,data):
-        tmpobj = self.bCIDData.pop(data['clOrdID'])
-        msg = tmpobj['msg']
-        deln  = -1
-        for n in range(len(self.okexTradeMsgs)):
-            d = self.okexTradeMsgs[n]
-            if d['cid'] == msg['cid']:
-                deln = n
-                break
-        if deln >= 0:
-            self.okexTradeMsgs.pop(deln)
+        if data['clOrdID'] in self.bCIDData:
+            tmpobj = self.bCIDData.pop(data['clOrdID'])
+            msg = tmpobj['msg']
+            deln  = -1
+            for n in range(len(self.okexTradeMsgs)):
+                d = self.okexTradeMsgs[n]
+                if d['cid'] == msg['cid']:
+                    deln = n
+                    break
+            if deln >= 0:
+                self.okexTradeMsgs.pop(deln)
+        else:
+            print("非交易对下单，已成功取消的定单ID为bitmex下单服务器自动生成,")
+            print(data)
 
     #bitmex下单服务器反回下单情况
     def onBitmexTradeBack(self,datadic):

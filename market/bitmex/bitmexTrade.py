@@ -6,6 +6,7 @@ import bitmex
 
 import json
 import datetime
+import time
 # kfpth = '../../../../btc/bitmex/key.txt'
 # kfpth = '/Users/Allen/Documents/key/bitmexkey.txt'
 
@@ -270,7 +271,7 @@ class BitMexFuture:
         cID = clientID
         if cID == '':
             self.baseCID += 1
-            cID = tradeType + '-' + str(self.baseCID) + '-' + str(time.time())
+            cID = tradeType + '-' + str(self.baseCID) + '-' + str(int(time.time()))
 
         if tradeType == 'ol': #开多
             

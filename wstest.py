@@ -52,10 +52,15 @@ class WsTool(object):
         # thread.start_new_thread(run, ())
 
 def test():
-    import datetime
+    # import datetime
 
-    dat = datetime.datetime(2000,1,1,8,0)
-    print(dat)
+    # dat = datetime.datetime(2000,1,1,8,0)
+    # print(dat)
+    for i in [12.12300, 12.00, 200.12000, 200.0]:
+        d = '{:g}'.format(i)
+        print(type(d))
+        print(float(d))
+        print('{:g}'.format(i))
 
 
 def main():

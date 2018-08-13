@@ -178,7 +178,7 @@ def main():
     configdic = reconfig()
 
     tradetool = analyseManger.TradeTool(apikeytool.apikeydic,configdic)
-
+    tradetool.setLogShow(False)
     delaycount = configdic['reconfigTime']
 
     start_server()
