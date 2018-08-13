@@ -58,7 +58,7 @@ class OKFuture:
     # {type:transfer,amount:数量,from:从那个资金帐户划转,to:划转到那个资金帐户,cointype:btc}
     
         bcmsg = ''
-
+    #注意事项，okex后边的三个参数说是可有可无，但不填入数值，签名会出错，无法下单
         if msgdic['type'] == 'ol':#开多
             if self.isTest:
                 logstr = '测试开多，数量:%d,价格:%.2f,是否限价单:%d'%(msgdic['amount'],msgdic['price'],msgdic['islimit'])
