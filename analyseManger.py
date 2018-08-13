@@ -54,6 +54,7 @@ class TradeTool(object):
         self.stepPercent = 0.005
         self.movePercent = 0.003
         self.normTime = 3*60*60    #小时换算成秒
+        self.startDaly = 0    #服务器开始工作延时，单位为分钟
 
         self.initTraddeConfig(tradeconfiddic)
 
@@ -111,6 +112,8 @@ class TradeTool(object):
         self.bCIDData = {}
         #定单ID生成算法：b_orderType_CIDBase_time
         self.oCIDData = {}
+
+        self.toolStartTime = int(time.time())
 
         self.initSocket()
 
@@ -263,6 +266,7 @@ class TradeTool(object):
         self.movePercent = self.stepPercent*conf['movePercent']
         self.normTime = self.tradeConfig['normTime']*60*60    #小时换算成秒
         self.baseAmount = self.tradeConfig['baseAmount']      #okex合约张数，bitmex要X100
+        self.startDaly = self.tradeConfig['startDaly']
 
     #生成用户自定义定单ID
     def crecteOrderCID(self,market,orderType):
@@ -355,7 +359,18 @@ class TradeTool(object):
         return None
     #检测是否需要下单
     def tradeTest(self):
-        
+        if self.startDaly < 0:
+            self.obsubs = []
+            self.bosubs = []
+            self.okexTradeMsgs = []
+            self.bCIDData = {}
+            self.oCIDData = {}
+            return
+        elif self.startDaly > 0:
+            ntime = (int(time.time()) - self.toolStartTime)/60
+            if ntime < self.startDaly:#未达到开始时间
+                return
+
         lastOBsub = self.lastSub['ob']['subOB']
         lastBOsub = self.lastSub['bo']['subBO']
         if lastOBsub <= 0:  #bitmex价格高于okex
@@ -673,6 +688,16 @@ class TradeTool(object):
                 self.onBitmexOrderOnline(datadic['data'][0]) #定单成功委托
             elif datadic['action'] == 'insert':#新增定单
                 self.onBitmexOrderStart(datadic['data'][0])
+            elif datadic['action'] == 'update' and datadic['data'][0]['ordStatus'] == 'Filled':#定单完全成交
+            #{u'action': u'update', 
+            #u'table': u'order', u'data': 
+                #[{u'orderID': u'b4140470-66c8-dc3b-8f89-6c8cba4d107a', 
+                #u'account': 278343, u'ordStatus': u'Filled', u'cumQty': 100, 
+                #u'workingIndicator': False, u'timestamp': u'2018-08-13T00:44:11.725Z', 
+                #u'symbol': u'XBTUSD', u'leavesQty': 0, u'simpleLeavesQty': 0, 
+                #u'simpleCumQty': 0.01581, u'clOrdID': u'', 
+                #u'avgPx': 6338}]}
+                self.onBitmexTradeOK(datadic['data'][0])
         elif 'table' in datadic and datadic['table'] == 'margin': #你账户的余额和保证金要求的更新
             print('---margin--bitmex--')
             print(datadic)
@@ -687,8 +712,12 @@ class TradeTool(object):
     #bitmex新增加定单委托
     def onBitmexOrderStart(self,data):
         if data['ordStatus'] == 'New':
-            print('新增定单,cid:%s'%(data['clOrdID']))
-            if data['ordStatus']['workingIndicator']:
+            if data['clOrdID'] != '':
+                msg = '新增定单,cid:%s'%(data['clOrdID'].encode())
+                print(msg)
+            else:
+                print('网页上新增委托，没有cid')
+            if data['workingIndicator']:
                 self.onBitmexOrderOnline(data) #定单已成功委托
     #当下单已成功委托
     def onBitmexOrderOnline(self,data):

@@ -135,6 +135,14 @@ class Servers(socketserver.StreamRequestHandler):
                 tradetool.setTradeTest(True)
             elif data == 'closetest':
                 tradetool.setTradeTest(False)
+            elif data == 'openlog':
+                tradetool.setLogShow(True)
+            elif data == 'closelog':
+                tradetool.setLogShow(False)
+            elif data == 'start':
+                tradetool.startDaly = 0
+            elif data == 'stop':
+                tradetool.startDaly = -1
             else:
                 print('cmd erro.....')
 

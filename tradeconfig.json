@@ -7,5 +7,6 @@
     "movePercent":0.6,      
     "normTime":3,           
     "reconfigTime":60,      
-    "baseAmount":1          
+    "baseAmount":1,
+    "startDaly":-1      
 }
