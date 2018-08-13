@@ -81,6 +81,7 @@ class Servers(socketserver.StreamRequestHandler):
                 print(data)
                 tradetool.onTradeMsg(dicdata['data'])
             else:
+                print('signErro')
                 self.request.send('{"erro":"signErro"}'.encode())
 
             # self.request.send('aaa')

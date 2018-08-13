@@ -759,27 +759,29 @@ class TradeTool(object):
             ptype = self.okexTradeMsgs.pop(0)
             if ptype['cid'] == data['clOrdID']:
                 print('cid is eq:%s'%(data['clOrdID']))
-                ocid = data['clOrdID']
+                ocid = ptype['cid']
                 isSendOK = False
-                if ptype == 'ol':
-                    msg = {'type':'ol','amount':self.baseAmount,'price':self.okexDatas[1][0],'islimit':1,'cid':ocid}
+                msg = {}
+                if ptype['type'] == 'ol':
+                    msg = {'type':'ol','amount':ptype['amount'],'price':self.okexDatas[1][0],'islimit':1,'cid':ocid}
                     self.oCIDData = {'msg':msg,'state':0,'cid':ocid}
                     isSendOK = self.sendMsgToOkexTrade('ol', msg)
-                elif ptype == 'os':
-                    msg = {'type':'os','amount':self.baseAmount,'price':self.okexDatas[0][0],'islimit':1,'cid':ocid}
+                elif ptype['type'] == 'os':
+                    msg = {'type':'os','amount':ptype['amount'],'price':self.okexDatas[0][0],'islimit':1,'cid':ocid}
                     self.oCIDData = {'msg':msg,'state':0,'cid':ocid}
                     isSendOK = self.sendMsgToOkexTrade('os', msg)
-                elif ptype == 'cl':
-                    msg = {'type':'cl','amount':self.baseAmount,'price':self.okexDatas[0][0],'islimit':1,'cid':ocid}
+                elif ptype['type'] == 'cl':
+                    msg = {'type':'cl','amount':ptype['amount'],'price':self.okexDatas[0][0],'islimit':1,'cid':ocid}
                     self.oCIDData = {'msg':msg,'state':0,'cid':ocid}
                     isSendOK = self.sendMsgToOkexTrade('cl', msg)
-                elif ptype == 'cs':
-                    msg = {'type':'cs','amount':self.baseAmount,'price':self.okexDatas[1][0],'islimit':1,'cid':ocid}
+                elif ptype['type'] == 'cs':
+                    msg = {'type':'cs','amount':ptype['amount'],'price':self.okexDatas[1][0],'islimit':1,'cid':ocid}
                     self.oCIDData = {'msg':msg,'state':0,'cid':ocid}
                     isSendOK = self.sendMsgToOkexTrade('cs', msg)
                 if isSendOK:
                     print('okex下单成功已发送')
                 else:
+                    print(msg)
                     print('okex下单发送网络错误')
         else:
             print("非交易对下单，完全成交的定单ID为bitmex下单服务器自动生成,")
@@ -903,6 +905,7 @@ class TradeTool(object):
                     outobj = {'type':ptype,'time':int(time.time()),'sign':'issigned','data':msg}
                     outstr = json.dumps(outobj)
                     self.okexTradeSocket.send(outstr.encode())
+                    return True
                 else:
                     ptime = int(time.time())
                     sign = signTool.signMsg(msg,ptime,self.okexSeckey)

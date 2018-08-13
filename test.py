@@ -98,7 +98,7 @@ class Servers(socketserver.StreamRequestHandler):
             elif data == 'closeob':
                 tradetool.closeOB(subpurce = 31.1)
             elif data == 'okexol':
-                msg = {'type':'ol','amount':tradetool.baseAmount,'price':1000.0,'islimit':1}
+                msg = {'type':'ol','amount':tradetool.baseAmount,'price':1000.0,'islimit':1,'cid':'sssss'}
                 tradetool.sendMsgToOkexTrade('ol', msg)
             elif data == 'okexos':
                 msg = {'type':'os','amount':tradetool.baseAmount,'price':20000.0,'islimit':1}
@@ -147,6 +147,8 @@ class Servers(socketserver.StreamRequestHandler):
                 tradetool.startDaly = 0
             elif data == 'stop':
                 tradetool.startDaly = -1
+            elif data == 't':
+                print(tradetool.okexDatas[1][0])
             else:
                 print('cmd erro.....')
 
