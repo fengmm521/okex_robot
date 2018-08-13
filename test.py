@@ -137,7 +137,7 @@ class Servers(socketserver.StreamRequestHandler):
                 tradetool.setTradeTest(False)
             elif data == 'openlog' or data == 'olog':
                 tradetool.setLogShow(True)
-            elif data == 'closelog' or or data == 'clog':
+            elif data == 'closelog' or data == 'clog':
                 tradetool.setLogShow(False)
             elif data == 'clear':
                 tradetool.clearCache()
@@ -150,12 +150,12 @@ class Servers(socketserver.StreamRequestHandler):
             else:
                 print('cmd erro.....')
 
-            print('---------okexTradeMsgs----------')
-            print(tradetool.okexTradeMsgs)
-            print('---------bosubs----------')
-            print(tradetool.bosubs)
-            print('---------obsubs----------')
-            print(tradetool.obsubs)
+            # print('---------okexTradeMsgs----------')
+            # print(tradetool.okexTradeMsgs)
+            # print('---------bosubs----------')
+            # print(tradetool.bosubs)
+            # print('---------obsubs----------')
+            # print(tradetool.obsubs)
             self.request.send('ok')
 
 def startServerThread():

@@ -285,7 +285,7 @@ class TradeTool(object):
     def openOB(self,subpurce,isReset = False): #开仓,okex买入，bitmex卖出
         cid = self.crecteOrderCID('bitmex','os')
         msg = {'type':'os','amount':self.baseAmount*100,'price':self.bitmexDatas[1][0],'islimit':1,'cid':cid}
-        self.bCIDData[cid] = {'msg':msg,'state':0}
+        self.bCIDData[cid] = {'msg':msg,'state':0,'type':'oob','sub':[]}
         if self.sendMsgToBitmexTrade('os', msg):
             self.okexTradeMsgs.append({'type':'ol','amount':self.baseAmount,'cid':cid})
             if isReset:
@@ -303,19 +303,21 @@ class TradeTool(object):
             pp = len(self.obsubs)
             cid = self.crecteOrderCID('bitmex','cs')
             msg = {'type':'cs','amount':self.baseAmount*100*pp,'price':self.bitmexDatas[0][0],'islimit':1,'cid':cid}
-            self.bCIDData[cid] = {'msg':msg,'state':0}
+            self.bCIDData[cid] = {'msg':msg,'state':0,'type':'coba','sub':[]}
             if self.sendMsgToBitmexTrade('cs', msg):
                 self.okexTradeMsgs.append({'type':'cl','amount':self.baseAmount*pp,'cid':cid})
+                self.bCIDData[cid]['sub'] = list(self.obsubs)
                 self.obsubs = []
                 return msg
         else:
             cid = self.crecteOrderCID('bitmex','cs')
             msg = {'type':'cs','amount':self.baseAmount*100,'price':self.bitmexDatas[0][0],'islimit':1,'cid':cid}
-            self.bCIDData[cid] = {'msg':msg,'state':0}
+            self.bCIDData[cid] = {'msg':msg,'state':0,'type':'cob','sub':[]}
             if self.sendMsgToBitmexTrade('cs', msg):
                 self.okexTradeMsgs.append({'type':'cl','amount':self.baseAmount,'cid':cid})
                 if not isReset:
                     subprice = self.obsubs.pop()
+                    self.bCIDData[cid]['sub'] = [subprice]
                 return msg
             print(self.obsubs)
         return None
@@ -324,7 +326,7 @@ class TradeTool(object):
     def openBO(self,subpurce,isReset = False): #开仓,bitmex买入,okex卖出
         cid = self.crecteOrderCID('bitmex','ol')
         msg = {'type':'ol','amount':self.baseAmount*100,'price':self.bitmexDatas[0][0],'islimit':1,'cid':cid}
-        self.bCIDData[cid] = {'msg':msg,'state':0}
+        self.bCIDData[cid] = {'msg':msg,'state':0,'type':'obo','sub':[]}
         if self.sendMsgToBitmexTrade('ol', msg):
             self.okexTradeMsgs.append({'type':'os','amount':self.baseAmount,'cid':cid})
             if isReset:
@@ -341,19 +343,21 @@ class TradeTool(object):
             pp =len(self.bosubs)
             cid = self.crecteOrderCID('bitmex','cl')
             msg = {'type':'cl','amount':self.baseAmount*100*pp,'price':self.bitmexDatas[0][0],'islimit':1,'cid':cid}
-            self.bCIDData[cid] = {'msg':msg,'state':0}
+            self.bCIDData[cid] = {'msg':msg,'state':0,'type':'cboa','sub':[]}
             if self.sendMsgToBitmexTrade('cl', msg):
                 self.okexTradeMsgs.append({'type':'cs','amount':self.baseAmount*pp,'cid':cid})
+                self.bCIDData[cid]['sub'] = list(self.bosubs)
                 self.bosubs = []
                 return msg
         else:
             cid = self.crecteOrderCID('bitmex','cl')
             msg = {'type':'cl','amount':self.baseAmount*100,'price':self.bitmexDatas[0][0],'islimit':1,'cid':cid}
-            self.bCIDData[cid] = {'msg':msg,'state':0}
+            self.bCIDData[cid] = {'msg':msg,'state':0,'type':'cbo','sub':[]}
             if self.sendMsgToBitmexTrade('cl', msg):
                 self.okexTradeMsgs.append({'type':'cs','amount':self.baseAmount,'cid':cid})
                 if not isReset:
                     subprice = self.bosubs.pip()
+                    self.bCIDData[cid]['sub'] = [subprice]
                 print(self.bosubs)
                 return msg
         return None
@@ -793,6 +797,18 @@ class TradeTool(object):
                     break
             if deln >= 0:
                 self.okexTradeMsgs.pop(deln)
+            if tmpobj['type'] == 'oob':
+                self.obsubs.pop()
+            elif tmpobj['type'] == 'cob' and tmpobj['sub']:
+                self.obsubs.append(tmpobj['sub'][0])
+            elif tmpobj['type'] == 'obo':
+                self.bosubs.pop()
+            elif tmpobj['type'] == 'cbo' and tmpobj['sub']:
+                self.bosubs.append(tmpobj['sub'][0])
+            elif tmpobj['type'] == 'coba' and tmpobj['sub']:
+                self.obsubs = list(tmpobj['sub'])
+            elif tmpobj['type'] == 'cboa' and tmpobj['sub']:
+                self.bosubs = list(tmpobj['sub'])
         else:
             print("非交易对下单，已成功取消的定单ID为bitmex下单服务器自动生成,")
             print(self.bCIDData)
