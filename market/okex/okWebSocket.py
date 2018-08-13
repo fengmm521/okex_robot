@@ -80,6 +80,7 @@ class okWSTool():
                         print("没有客户端连接")
             except Exception as e:
                 print('客户端网络错误')
+                self.csocket = None
         thread.start_new_thread(run, ())
         
     #收到来自数据处理的命令消息

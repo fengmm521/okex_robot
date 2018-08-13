@@ -89,7 +89,7 @@ class BitMexFuture:
             if self.isTest:
                 bcmsg = '{"type":"bimex_test_ol"}'
             else:
-                bcmsg = self.future_trade_xbtusd(msgdict['price'], msgdict['amount'],'ol',bool(msgdict['islimit']))
+                bcmsg = self.future_trade_xbtusd(msgdict['price'], msgdict['amount'],'ol',bool(msgdict['islimit']),clientID = msgdict['cid'])
             savestr = 'ol,price:%.1f,amount:%d,islimit:%d,bc:'%(msgdict['price'],msgdict['amount'],msgdict['islimit']) + str(bcmsg)
             self.testTradeSave(savestr)
             print(savestr)
@@ -97,7 +97,7 @@ class BitMexFuture:
             if self.isTest:
                 bcmsg = '{"type":"bimex_test_cl"}'
             else:
-                bcmsg = self.future_trade_xbtusd(msgdict['price'], msgdict['amount'],'cl',bool(msgdict['islimit']))
+                bcmsg = self.future_trade_xbtusd(msgdict['price'], msgdict['amount'],'cl',bool(msgdict['islimit']),clientID = msgdict['cid'])
             savestr = 'cl,price:%.1f,amount:%d,islimit:%d,bc:'%(msgdict['price'],msgdict['amount'],msgdict['islimit']) + str(bcmsg)
             self.testTradeSave(savestr)
             print(savestr)
@@ -105,7 +105,7 @@ class BitMexFuture:
             if self.isTest:
                 bcmsg = '{"type":"bimex_test_os"}'
             else:
-                bcmsg = self.future_trade_xbtusd(msgdict['price'], msgdict['amount'],'os',bool(msgdict['islimit']))
+                bcmsg = self.future_trade_xbtusd(msgdict['price'], msgdict['amount'],'os',bool(msgdict['islimit']),clientID = msgdict['cid'])
             savestr = 'os,price:%.1f,amount:%d,islimit:%d,bc:'%(msgdict['price'],msgdict['amount'],msgdict['islimit']) + str(bcmsg)
             self.testTradeSave(savestr)
             print(savestr)
@@ -113,7 +113,7 @@ class BitMexFuture:
             if self.isTest:
                 bcmsg = '{"type":"bimex_test_cs"}'
             else:
-                bcmsg = self.future_trade_xbtusd(msgdict['price'], msgdict['amount'],'cs',bool(msgdict['islimit']))
+                bcmsg = self.future_trade_xbtusd(msgdict['price'], msgdict['amount'],'cs',bool(msgdict['islimit']),clientID = msgdict['cid'])
             savestr = 'os,price:%.1f,amount:%d,islimit:%d,bc:'%(msgdict['price'],msgdict['amount'],msgdict['islimit']) + str(bcmsg)
             self.testTradeSave(savestr)
             print(savestr)
@@ -257,7 +257,7 @@ class BitMexFuture:
         f.write(outstr)
         f.close()
     #xbtusd期货下单
-    def future_trade_xbtusd(self,price,amount,tradeType,postOnly,clientID = ''):
+    def future_trade_xbtusd(self,price,amount,tradeType,postOnly,clientID):
     # bitmex的被动下单方式:
     # 设置order的execInst参数为ParticipateDoNotInitiate，当下单价格为主动成交时，下单会被取消
     # ParticipateDoNotInitiate: Also known as a Post-Only order. 
@@ -269,7 +269,7 @@ class BitMexFuture:
         # print(self.client.Order.__dict__)
         # print(dir(self.client.Order))
         cID = clientID
-        if cID == '':
+        if cID == '' or cID == None:
             self.baseCID += 1
             cID = tradeType + '-' + str(self.baseCID) + '-' + str(int(time.time()))
 

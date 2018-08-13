@@ -357,19 +357,37 @@ class TradeTool(object):
                 print(self.bosubs)
                 return msg
         return None
+
+    def clearCache(self):
+        self.obsubs = []
+        self.bosubs = []
+        self.okexTradeMsgs = []
+        self.bCIDData = {}
+        self.oCIDData = {}
+        print('clear:obsubs,bosubs,okexTradeMsgs,bCIDData,oCIDData')
+
+    def printDatas(self):
+        print('---------okexTradeMsgs------------')
+        print(self.okexTradeMsgs)
+        print('---------bCIDData------------')
+        print(self.bCIDData)
+        print('----------oCIDData-----------')
+        print(self.oCIDData)
+        print('---------obsubs------------')
+        print(self.obsubs)
+        print('----------bosubs-----------')
+        print(self.bosubs)
+        
+
     #检测是否需要下单
     def tradeTest(self):
+        isStop = False
         if self.startDaly < 0:
-            self.obsubs = []
-            self.bosubs = []
-            self.okexTradeMsgs = []
-            self.bCIDData = {}
-            self.oCIDData = {}
-            return
+            isStop = True
         elif self.startDaly > 0:
             ntime = (int(time.time()) - self.toolStartTime)/60
             if ntime < self.startDaly:#未达到开始时间
-                return
+                isStop = True
 
         lastOBsub = self.lastSub['ob']['subOB']
         lastBOsub = self.lastSub['bo']['subBO']
@@ -378,6 +396,8 @@ class TradeTool(object):
             stepprice = maxprice * self.stepPercent
             if self.isShowLog:
                 print('stepprice=%.2f'%(stepprice))
+            if isStop:
+                return
             if len(self.obsubs) < 1:
                 if abs(lastOBsub) > stepprice and len(self.obsubs) < 1:
                     self.openOB(stepprice)
@@ -398,6 +418,8 @@ class TradeTool(object):
             stepprice = maxprice * self.stepPercent
             if self.isShowLog:
                 print('stepprice=%.2f'%(stepprice))
+            if isStop:
+                return
             if len(self.obsubs) < 1:
                 if abs(lastBOsub) > stepprice and len(self.obsubs) < 1:
                     self.openBO(stepprice)
@@ -731,23 +753,30 @@ class TradeTool(object):
         if data['clOrdID'] in self.bCIDData:
             self.bCIDData[data['clOrdID']]['state'] = 2
             ptype = self.okexTradeMsgs.pop(0)
-            ocid = data['clOrdID']
-            if ptype == 'ol':
-                msg = {'type':'ol','amount':self.baseAmount,'price':self.okexDatas[1][0],'islimit':1,'cid':ocid}
-                self.oCIDData = {'msg':msg,'state':0}
-                self.sendMsgToOkexTrade('ol', msg)
-            elif ptype == 'os':
-                msg = {'type':'os','amount':self.baseAmount,'price':self.okexDatas[0][0],'islimit':1,'cid':ocid}
-                self.oCIDData = {'msg':msg,'state':0}
-                self.sendMsgToOkexTrade('os', msg)
-            elif ptype == 'cl':
-                msg = {'type':'cl','amount':self.baseAmount,'price':self.okexDatas[0][0],'islimit':1,'cid':ocid}
-                self.oCIDData = {'msg':msg,'state':0}
-                self.sendMsgToOkexTrade('cl', msg)
-            elif ptype == 'cs':
-                msg = {'type':'cs','amount':self.baseAmount,'price':self.okexDatas[1][0],'islimit':1,'cid':ocid}
-                self.oCIDData = {'msg':msg,'state':0}
-                self.sendMsgToOkexTrade('cs', msg)
+            if ptype['cid'] == data['clOrdID']:
+                print('cid is eq:%s'%(data['clOrdID']))
+                ocid = data['clOrdID']
+                isSendOK = False
+                if ptype == 'ol':
+                    msg = {'type':'ol','amount':self.baseAmount,'price':self.okexDatas[1][0],'islimit':1,'cid':ocid}
+                    self.oCIDData = {'msg':msg,'state':0,'cid':ocid}
+                    isSendOK = self.sendMsgToOkexTrade('ol', msg)
+                elif ptype == 'os':
+                    msg = {'type':'os','amount':self.baseAmount,'price':self.okexDatas[0][0],'islimit':1,'cid':ocid}
+                    self.oCIDData = {'msg':msg,'state':0,'cid':ocid}
+                    isSendOK = self.sendMsgToOkexTrade('os', msg)
+                elif ptype == 'cl':
+                    msg = {'type':'cl','amount':self.baseAmount,'price':self.okexDatas[0][0],'islimit':1,'cid':ocid}
+                    self.oCIDData = {'msg':msg,'state':0,'cid':ocid}
+                    isSendOK = self.sendMsgToOkexTrade('cl', msg)
+                elif ptype == 'cs':
+                    msg = {'type':'cs','amount':self.baseAmount,'price':self.okexDatas[1][0],'islimit':1,'cid':ocid}
+                    self.oCIDData = {'msg':msg,'state':0,'cid':ocid}
+                    isSendOK = self.sendMsgToOkexTrade('cs', msg)
+                if isSendOK:
+                    print('okex下单成功已发送')
+                else:
+                    print('okex下单发送网络错误')
         else:
             print("非交易对下单，完全成交的定单ID为bitmex下单服务器自动生成,")
             print(data)
@@ -766,6 +795,7 @@ class TradeTool(object):
                 self.okexTradeMsgs.pop(deln)
         else:
             print("非交易对下单，已成功取消的定单ID为bitmex下单服务器自动生成,")
+            print(self.bCIDData)
             print(data)
 
     #bitmex下单服务器反回下单情况

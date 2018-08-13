@@ -123,22 +123,26 @@ class Servers(socketserver.StreamRequestHandler):
                 tradetool.sendMsgToBitmexTrade('cs', msg)
             elif data == 'getalloride':
                 tradetool.getAllTrade()
-            elif data == 'cancelAllTradeokex':
+            elif data == 'cancelokex' or data == 'cokex':
                 tradetool.cancelAllTrade('okex')
-            elif data == 'cancelAllTradebitmex':
+            elif data == 'cancelbitmex' or data == 'cbitmex':
                 tradetool.cancelAllTrade('bitmex')
             elif data == 'getBitmexFunding':
                 tradetool.getBitmexFunding()
             elif data == 'account':
                 tradetool.getAccount()
-            elif data == 'opentest':
+            elif data == 'opentest' or data == 'ot':
                 tradetool.setTradeTest(True)
-            elif data == 'closetest':
+            elif data == 'closetest' or data == 'ct':
                 tradetool.setTradeTest(False)
-            elif data == 'openlog':
+            elif data == 'openlog' or data == 'olog':
                 tradetool.setLogShow(True)
-            elif data == 'closelog':
+            elif data == 'closelog' or or data == 'clog':
                 tradetool.setLogShow(False)
+            elif data == 'clear':
+                tradetool.clearCache()
+            elif data == 'print':
+                tradetool.printDatas()
             elif data == 'start':
                 tradetool.startDaly = 0
             elif data == 'stop':

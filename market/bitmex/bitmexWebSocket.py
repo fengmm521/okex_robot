@@ -69,6 +69,7 @@ class bitmexWSTool(object):
                         self.sendcount = 100
                         print("没有客户端连接")
             except Exception as e:
+                self.csocket = None
                 print('客户端网络错误1')
         thread.start_new_thread(run, ())
     def getNonceTime(self):
