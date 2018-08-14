@@ -2,6 +2,7 @@
 *.pyc
 market/okex/okexdeep.txt
 market/bitmex/bitmexdeep.txt
+market/bitmex/testtrade.txt
 market/okexdeep.txt
 market/bitmexdeep.txt
 market/okex-bitmex.csv
@@ -9,7 +10,3 @@ market/okexw1/okexdeep.txt
 market/okexw2/okexdeep.txt
 market/okex1deep.txt
 market/okex2deep.txt
-market/bitmex/testtrade.txt
-market/bitmex/testtrade.txt
-market/bitmex/testtrade.txt
-market/bitmex/testtrade.txt
