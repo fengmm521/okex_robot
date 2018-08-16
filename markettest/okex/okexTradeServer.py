@@ -97,8 +97,9 @@ def startServer():
     
 def main():
     global tradetool
+    secretkey = apikeytool.apikeydic['okex']['secretkey']
     isTest =  bool(apikeytool.apikeydic['isTest'])
-    tradetool = okTrade.OKFuture(isTest)
+    tradetool = okTrade.OKFuture(secretkey,isTest)
     tradetool.setObjName('okex')
     startServer()
 

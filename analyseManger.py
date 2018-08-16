@@ -316,8 +316,9 @@ class TradeTool(object):
             if self.sendMsgToBitmexTrade('cs', msg):
                 self.okexTradeMsgs.append({'type':'cl','amount':self.baseAmount,'cid':cid})
                 if not isReset:
-                    subprice = self.obsubs.pop()
-                    self.bCIDData[cid]['sub'] = [subprice]
+                    if self.obsubs:
+                        subprice = self.obsubs.pop()
+                        self.bCIDData[cid]['sub'] = [subprice]
                 return msg
             print(self.obsubs)
         return None
@@ -356,8 +357,9 @@ class TradeTool(object):
             if self.sendMsgToBitmexTrade('cl', msg):
                 self.okexTradeMsgs.append({'type':'cs','amount':self.baseAmount,'cid':cid})
                 if not isReset:
-                    subprice = self.bosubs.pip()
-                    self.bCIDData[cid]['sub'] = [subprice]
+                    if self.bosubs:
+                        subprice = self.bosubs.pop()
+                        self.bCIDData[cid]['sub'] = [subprice]
                 print(self.bosubs)
                 return msg
         return None

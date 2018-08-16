@@ -7,6 +7,8 @@ import bitmex
 import json
 import datetime
 import time
+import socket
+import threading
 # kfpth = '../../../../btc/bitmex/key.txt'
 # kfpth = '/Users/Allen/Documents/key/bitmexkey.txt'
 
@@ -14,10 +16,11 @@ import time
 
 class BitMexFuture:
 
-    def __init__(self,isTest = True):
+    def __init__(self,secretkey,isTest = True):
 
         # self.apikey = apikey
         # self.secret = secretkey
+        self.secret = secretkey
 
         # self.client = bitmex.bitmex(test=False, api_key=apikey, api_secret=secretkey)
         # https://www.bitmex.com/realtime
@@ -30,17 +33,27 @@ class BitMexFuture:
 
         self.testSocket = None
 
+        self.okexTradethr = None
+
+        self.initTestDataSocket()
+
     def setClientSocket(self,clientsocket):
         self.csocket = clientsocket
 
     def initTestDataSocket(self):
         isErro = False
         try:
-            print('connecting okex http trade server:',self.configdic['okex']['httpaddr'],self.configdic['okex']['httpport'])
+            print('connecting bitmex testData server:','127.0.0.1',9899)
             self.testSocket = socket.socket()  # instantiate
             self.testSocket.connect(('127.0.0.1', 9899))  # connect to the server
             print('okex http trade server connected!')
-            
+            def okexTradeRun():
+                while True:
+                    data = self.testSocket.recv(100*1024)
+                    print(data)
+            self.okexTradethr = threading.Thread(target=okexTradeRun,args=())
+            self.okexTradethr.setDaemon(True)
+            self.okexTradethr.start()
         except Exception as e:
             print('connect okex http trade server erro...')
             self.testSocket = None
@@ -49,10 +62,9 @@ class BitMexFuture:
     def sendMsgToTestDataSocket(self,msg):
         try:
             if self.testSocket:
-                outstr = json.dumps(outobj)
+                outstr = json.dumps(msg)
                 self.testSocket.send(outstr.encode())
                 return True
-
             else:
                 print('没有数据测试服务器')
                 return False
@@ -76,7 +88,6 @@ class BitMexFuture:
         #     print('客户端网络错误')
     #收到来自数据分析客户端的下单请求
     def onTradeMsg(self,msgdict):
-
         bcmsg = ''        
         if msgdict['type'] == 'ol':#开多
             if self.isTest:
@@ -84,7 +95,7 @@ class BitMexFuture:
             else:
                 bcmsg = self.future_trade_xbtusd(msgdict['price'], msgdict['amount'],'ol',bool(msgdict['islimit']),clientID = msgdict['cid'])
             savestr = 'ol,price:%.1f,amount:%d,islimit:%d,bc:'%(msgdict['price'],msgdict['amount'],msgdict['islimit']) + str(bcmsg)
-            self.testTradeSave(savestr)
+
             print(savestr)
         elif msgdict['type'] == 'cl':#平多
             if self.isTest:
@@ -92,7 +103,7 @@ class BitMexFuture:
             else:
                 bcmsg = self.future_trade_xbtusd(msgdict['price'], msgdict['amount'],'cl',bool(msgdict['islimit']),clientID = msgdict['cid'])
             savestr = 'cl,price:%.1f,amount:%d,islimit:%d,bc:'%(msgdict['price'],msgdict['amount'],msgdict['islimit']) + str(bcmsg)
-            self.testTradeSave(savestr)
+
             print(savestr)
         elif msgdict['type'] == 'os':#开空
             if self.isTest:
@@ -100,7 +111,7 @@ class BitMexFuture:
             else:
                 bcmsg = self.future_trade_xbtusd(msgdict['price'], msgdict['amount'],'os',bool(msgdict['islimit']),clientID = msgdict['cid'])
             savestr = 'os,price:%.1f,amount:%d,islimit:%d,bc:'%(msgdict['price'],msgdict['amount'],msgdict['islimit']) + str(bcmsg)
-            self.testTradeSave(savestr)
+
             print(savestr)
         elif msgdict['type'] == 'cs':#平空
             if self.isTest:
@@ -108,7 +119,7 @@ class BitMexFuture:
             else:
                 bcmsg = self.future_trade_xbtusd(msgdict['price'], msgdict['amount'],'cs',bool(msgdict['islimit']),clientID = msgdict['cid'])
             savestr = 'os,price:%.1f,amount:%d,islimit:%d,bc:'%(msgdict['price'],msgdict['amount'],msgdict['islimit']) + str(bcmsg)
-            self.testTradeSave(savestr)
+
             print(savestr)
         elif msgdict['type'] == 'getall':#获取所有未成交定单
             # pass #返回所有未成交定单数据

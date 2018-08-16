@@ -92,7 +92,6 @@ class Servers(socketserver.StreamRequestHandler):
 class TradeServers(socketserver.StreamRequestHandler):
     def handle(self):
         global tradetool
-        tradetool.setSocketClient(self.request)
         print('got connection from ',self.client_address)
         while True:
             try:  
@@ -111,7 +110,7 @@ class TradeServers(socketserver.StreamRequestHandler):
             print("RECV from ", self.client_address)
             print(data)
             dicdata = json.loads(data)
-            tradetool.reciveMsgFromClient(dicdata)
+            tradetool.reciveMsgFromTestTradeServer(dicdata)
             print('收到测试下单信息')
 
 
@@ -126,13 +125,14 @@ def startServerThread():
 
 def startDataThread():
     global tradetool
-    tradetool = bitmexWebSocket.bitmexWSTool()
+    secretkey = apikeytool.apikeydic['okex']['secretkey']
+    tradetool = bitmexWebSocket.bitmexWSTool(secretkey)
     server = socketserver.ThreadingTCPServer(("127.0.0.1",9899),TradeServers,bind_and_activate = False)
     server.allow_reuse_address = True   #设置IP地址和端口可以不使用客户端连接等待，并手动绑定服务器地址和端口，手动激活服务器,要不然每一次重启服务器都会出现端口占用的问题
     server.server_bind()
     server.server_activate()
     print('server started:启动数据测试服务器')
-    print(addr)
+    print(("127.0.0.1",9899))
     server.serve_forever()
 
 def start_server():
@@ -152,7 +152,7 @@ def main():
     removeLogFile()
     start_server()
     while True:
-        time.sleep(3)
+        time.sleep(5)
         tradetool.sendDeepDataToClient()
 
 #测试

@@ -3,13 +3,15 @@
 #用于访问OKCOIN 期货REST API
 from HttpMD5Util import buildMySign,httpGet,httpPost
 import json
+import socket
+import threading
 
 class OKFuture:
-    def __init__(self,isTest = True):
+    def __init__(self,secretkey,isTest = True):
         self.__url = ''
         self.__apikey = None
         self.__secretkey = None
-        self.secretkey = None
+        self.secretkey = secretkey
         self.csocket = None
         self.isTest = isTest
         self.objname = 'okex'
@@ -17,16 +19,26 @@ class OKFuture:
 
         self.testSocket = None
         
+        self.okexTradethr = None
+
         self.initDataSocket()
 
-    def initDataSocket():
+    def initDataSocket(self):
         isErro = False
         try:
-            print('connecting okex http trade server:',self.configdic['okex']['httpaddr'],self.configdic['okex']['httpport'])
+        # if True:
+            print('connecting okex http trade server:','127.0.0.1',9898)
             self.testSocket = socket.socket()  # instantiate
             self.testSocket.connect(('127.0.0.1', 9898))  # connect to the server
             print('okex http trade server connected!')
-            
+            def okexTradeRun():
+                while True:
+                    data = self.testSocket.recv(100*1024)
+                    print('recive data len:%d'%(len(data)))
+                    print(data)
+            self.okexTradethr = threading.Thread(target=okexTradeRun,args=())
+            self.okexTradethr.setDaemon(True)
+            self.okexTradethr.start()
         except Exception as e:
             print('connect okex http trade server erro...')
             self.testSocket = None
@@ -35,11 +47,11 @@ class OKFuture:
 
     def sendMsgToTestDataSocket(self,msg):
         try:
+        # if True:
             if self.testSocket:
-                outstr = json.dumps(outobj)
+                outstr = json.dumps(msg)
                 self.testSocket.send(outstr.encode())
                 return True
-
             else:
                 print('没有数据测试服务器')
                 return False
@@ -60,7 +72,8 @@ class OKFuture:
 
     #期货下单
     def future_trade(self,symbol,contractType,price='',amount='',tradeType='',matchPrice='',leverRate=''):
-        msg = {'type':tradeType,'price':float(price),'amount':int(amount),'cid':''}
+        msg = {'type':tradeType,'price':float(price),'amount':int(amount),'cid':'1270246017934336'}
+        print('期货下单')
         self.sendMsgToTestDataSocket(msg)
         return ""
     #收到数据处理端的下单消息
@@ -132,7 +145,7 @@ class OKFuture:
             #首先获取所有未成交定单
 
             if self.isTest:
-                bcmsg = 'test_cancelall'
+                bcmsg = '{"test":"okex_cancelAll"}'
             else:
                 msg = {'type':'cancel','cid':''}
                 self.sendMsgToTestDataSocket(msg)

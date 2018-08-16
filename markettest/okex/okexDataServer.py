@@ -94,7 +94,6 @@ class TradeServers(socketserver.StreamRequestHandler):
     def handle(self):
         global tradetool
         print('got connection from ',self.client_address)
-        tradetool.setSocketClient(self.request)
         while True:
             try:  
                 data = self.request.recv(4096)
@@ -129,14 +128,16 @@ def startServerThread():
     
 def startDataServer():
     global tradetool
-    tradetool = okWebSocket.okWSTool()
+    secretkey = apikeytool.apikeydic['okex']['secretkey']
+    tradetool = okWebSocket.okWSTool(secretkey)
     tradetool.setObjName('okex')
     server = socketserver.ThreadingTCPServer(('127.0.0.1',9898),TradeServers,bind_and_activate = False)
     server.allow_reuse_address = True   #设置IP地址和端口可以不使用客户端连接等待，并手动绑定服务器地址和端口，手动激活服务器,要不然每一次重启服务器都会出现端口占用的问题
     server.server_bind()
     server.server_activate()
+    print(('127.0.0.1',9898))
     print('server started:okex数据测试服务器')
-    print(addr)
+    
     server.serve_forever()
     print('DataServer stoped----------------')
 def start_server():
@@ -156,7 +157,7 @@ def main():
     removeLogFile()
     start_server()
     while True:
-        time.sleep(3)
+        time.sleep(5)
         tradetool.sendDataTest()
 
 #测试

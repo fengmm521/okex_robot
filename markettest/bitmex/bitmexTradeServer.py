@@ -96,8 +96,9 @@ def startServer():
     
 def main():
     global tradetool
+    secretkey = apikeytool.apikeydic['bitmex']['secretkey']
     isTest =  bool(apikeytool.apikeydic['isTest'])
-    tradetool = bitmexTrade.BitMexFuture(,isTest)
+    tradetool = bitmexTrade.BitMexFuture(secretkey,isTest)
 
     startServer()
 
