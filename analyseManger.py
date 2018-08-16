@@ -6,6 +6,8 @@
 import os,sys
 from sys import version_info  
 
+import math   
+
 if version_info.major < 3:
     magetoolpth = '/usr/local/lib/python2.7/site-packages'
     if magetoolpth not in sys.path:
@@ -395,8 +397,8 @@ class TradeTool(object):
             if ntime < self.startDaly:#未达到开始时间
                 isStop = True
 
+
         lastOBsub = self.lastSub['ob']['subOB']
-        lastBOsub = self.lastSub['bo']['subBO']
         if lastOBsub <= 0:  #bitmex价格高于okex
             maxprice = self.bitmexDatas[1][0]
             stepprice = maxprice * self.stepPercent
@@ -404,43 +406,82 @@ class TradeTool(object):
                 print('stepprice=%.2f'%(stepprice))
             if isStop:
                 return
-            if len(self.obsubs) < 1:
-                if abs(lastOBsub) > stepprice and len(self.obsubs) < 1:
-                    self.openOB(stepprice)
-                elif abs(lastOBsub) > stepprice*((1+self.stepPercent)^2) and len(self.obsubs) < 2:
-                    self.openOB(stepprice*((1+self.stepPercent)^2))
-                elif abs(lastOBsub) > stepprice*((1+self.stepPercent)^3) and len(self.obsubs) < 3:
-                    self.openOB(stepprice*((1+self.stepPercent)^3))
-                elif abs(lastOBsub) > stepprice*((1+self.stepPercent)^4) and len(self.obsubs) < 4:
-                    self.openOB(stepprice*((1+self.stepPercent)^4))
-                elif abs(lastOBsub) > stepprice*((1+self.stepPercent)^5) and len(self.obsubs) < 5:
-                    self.openOB(stepprice*((1+self.stepPercent)^5))
-                elif abs(lastOBsub) > stepprice*((1+self.stepPercent)^6) and len(self.obsubs) < 6:
-                    self.openOB(stepprice*((1+self.stepPercent)^6))
-            elif abs(lastOBsub) > stepprice and len(self.bosubs) > 0:
+
+            if len(self.bosubs) > 1:
                 self.closeBO(stepprice,closeAll = True)
-        elif lastBOsub < 0:
+            elif abs(lastOBsub/stepprice) > 1.0:
+                c = abs(lastOBsub/stepprice) - len(self.obsubs)
+                if c > 1.0:
+                    opencount = math.floor(c)
+                    self.openOB(stepprice)
+                elif c < 1.0:
+                    self.closeOB(stepprice)
+        elif lastOBsub > 0:
             maxprice = self.okexDatas[1][0]
             stepprice = maxprice * self.stepPercent
             if self.isShowLog:
                 print('stepprice=%.2f'%(stepprice))
             if isStop:
                 return
-            if len(self.obsubs) < 1:
-                if abs(lastBOsub) > stepprice and len(self.obsubs) < 1:
-                    self.openBO(stepprice)
-                elif abs(lastBOsub) > stepprice*((1+self.stepPercent)^2) and len(self.obsubs) < 2:
-                    self.openBO(stepprice*((1+self.stepPercent)^2))
-                elif abs(lastBOsub) > stepprice*((1+self.stepPercent)^3) and len(self.obsubs) < 3:
-                    self.openBO(stepprice*((1+self.stepPercent)^3))
-                elif abs(lastBOsub) > stepprice*((1+self.stepPercent)^4) and len(self.obsubs) < 4:
-                    self.openBO(stepprice*((1+self.stepPercent)^4))
-                elif abs(lastBOsub) > stepprice*((1+self.stepPercent)^5) and len(self.obsubs) < 5:
-                    self.openBO(stepprice*((1+self.stepPercent)^5))
-                elif abs(lastBOsub) > stepprice*((1+self.stepPercent)^6) and len(self.obsubs) < 6:
-                    self.openBO(stepprice*((1+self.stepPercent)^6))
-            elif abs(lastBOsub) > stepprice and len(self.bosubs) > 0:
+
+            if len(self.obsubs) > 1
                 self.closeOB(stepprice,closeAll = True)
+            elif abs(lastOBsub/stepprice) > 1.0:
+                c =  abs(lastOBsub/stepprice) - len(self.bosubs)
+                if c > 1.0:
+                    opencount = math.floor(c)
+                    self.openBO(stepprice)
+                elif c < 1.0:
+                    self.closeBO(stepprice)
+                
+
+
+        # lastOBsub = self.lastSub['ob']['subOB']
+        # lastBOsub = self.lastSub['bo']['subBO']
+        # if lastOBsub <= 0:  #bitmex价格高于okex
+        #     maxprice = self.bitmexDatas[1][0]
+        #     stepprice = maxprice * self.stepPercent
+        #     if self.isShowLog:
+        #         print('stepprice=%.2f'%(stepprice))
+        #     if isStop:
+        #         return
+        #     if len(self.obsubs) < 1:
+        #         if abs(lastOBsub) > stepprice and len(self.obsubs) < 1:
+        #             self.openOB(stepprice)
+        #         elif abs(lastOBsub) > stepprice*((1+self.stepPercent)^2) and len(self.obsubs) < 2:
+        #             self.openOB(stepprice*((1+self.stepPercent)^2))
+        #         elif abs(lastOBsub) > stepprice*((1+self.stepPercent)^3) and len(self.obsubs) < 3:
+        #             self.openOB(stepprice*((1+self.stepPercent)^3))
+        #         elif abs(lastOBsub) > stepprice*((1+self.stepPercent)^4) and len(self.obsubs) < 4:
+        #             self.openOB(stepprice*((1+self.stepPercent)^4))
+        #         elif abs(lastOBsub) > stepprice*((1+self.stepPercent)^5) and len(self.obsubs) < 5:
+        #             self.openOB(stepprice*((1+self.stepPercent)^5))
+        #         elif abs(lastOBsub) > stepprice*((1+self.stepPercent)^6) and len(self.obsubs) < 6:
+        #             self.openOB(stepprice*((1+self.stepPercent)^6))
+        #     elif abs(lastOBsub) > stepprice and len(self.bosubs) > 0:
+        #         self.closeBO(stepprice,closeAll = True)
+        # elif lastBOsub < 0:
+        #     maxprice = self.okexDatas[1][0]
+        #     stepprice = maxprice * self.stepPercent
+        #     if self.isShowLog:
+        #         print('stepprice=%.2f'%(stepprice))
+        #     if isStop:
+        #         return
+        #     if len(self.obsubs) < 1:
+        #         if abs(lastBOsub) > stepprice and len(self.obsubs) < 1:
+        #             self.openBO(stepprice)
+        #         elif abs(lastBOsub) > stepprice*((1+self.stepPercent)^2) and len(self.obsubs) < 2:
+        #             self.openBO(stepprice*((1+self.stepPercent)^2))
+        #         elif abs(lastBOsub) > stepprice*((1+self.stepPercent)^3) and len(self.obsubs) < 3:
+        #             self.openBO(stepprice*((1+self.stepPercent)^3))
+        #         elif abs(lastBOsub) > stepprice*((1+self.stepPercent)^4) and len(self.obsubs) < 4:
+        #             self.openBO(stepprice*((1+self.stepPercent)^4))
+        #         elif abs(lastBOsub) > stepprice*((1+self.stepPercent)^5) and len(self.obsubs) < 5:
+        #             self.openBO(stepprice*((1+self.stepPercent)^5))
+        #         elif abs(lastBOsub) > stepprice*((1+self.stepPercent)^6) and len(self.obsubs) < 6:
+        #             self.openBO(stepprice*((1+self.stepPercent)^6))
+        #     elif abs(lastBOsub) > stepprice and len(self.bosubs) > 0:
+        #         self.closeOB(stepprice,closeAll = True)
 
         # "iOkexRate":0.0005,     //okex主动成交费率
         # "pOkexRate":0.0002,     //okex被动成交费率
@@ -765,19 +806,19 @@ class TradeTool(object):
                 isSendOK = False
                 msg = {}
                 if ptype['type'] == 'ol':
-                    msg = {'type':'ol','amount':ptype['amount'],'price':self.okexDatas[1][0],'islimit':1,'cid':ocid}
+                    msg = {'type':'ol','amount':ptype['amount'],'price':self.okexDatas[1][0]+5,'islimit':1,'cid':ocid}
                     self.oCIDData = {'msg':msg,'state':0,'cid':ocid}
                     isSendOK = self.sendMsgToOkexTrade('ol', msg)
                 elif ptype['type'] == 'os':
-                    msg = {'type':'os','amount':ptype['amount'],'price':self.okexDatas[0][0],'islimit':1,'cid':ocid}
+                    msg = {'type':'os','amount':ptype['amount'],'price':self.okexDatas[0][0]-5,'islimit':1,'cid':ocid}
                     self.oCIDData = {'msg':msg,'state':0,'cid':ocid}
                     isSendOK = self.sendMsgToOkexTrade('os', msg)
                 elif ptype['type'] == 'cl':
-                    msg = {'type':'cl','amount':ptype['amount'],'price':self.okexDatas[0][0],'islimit':1,'cid':ocid}
+                    msg = {'type':'cl','amount':ptype['amount'],'price':self.okexDatas[0][0]-5,'islimit':1,'cid':ocid}
                     self.oCIDData = {'msg':msg,'state':0,'cid':ocid}
                     isSendOK = self.sendMsgToOkexTrade('cl', msg)
                 elif ptype['type'] == 'cs':
-                    msg = {'type':'cs','amount':ptype['amount'],'price':self.okexDatas[1][0],'islimit':1,'cid':ocid}
+                    msg = {'type':'cs','amount':ptype['amount'],'price':self.okexDatas[1][0]+5,'islimit':1,'cid':ocid}
                     self.oCIDData = {'msg':msg,'state':0,'cid':ocid}
                     isSendOK = self.sendMsgToOkexTrade('cs', msg)
                 if isSendOK:
