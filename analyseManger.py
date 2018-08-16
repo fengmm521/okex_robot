@@ -117,6 +117,9 @@ class TradeTool(object):
 
         self.toolStartTime = int(time.time())
 
+        self.lastBitmexTradeTime = 0
+        self.lastOkexTradeTime = 0
+
         self.initSocket()
 
     def setLogShow(self,isShowLog):
@@ -289,6 +292,8 @@ class TradeTool(object):
         msg = {'type':'os','amount':self.baseAmount*100,'price':self.bitmexDatas[1][0],'islimit':1,'cid':cid}
         self.bCIDData[cid] = {'msg':msg,'state':0,'type':'oob','sub':[]}
         if self.sendMsgToBitmexTrade('os', msg):
+            self.lastBitmexTradeTime = int(time.time())
+            # self.lastOkexTradeTime = 0
             self.okexTradeMsgs.append({'type':'ol','amount':self.baseAmount,'cid':cid})
             if isReset:
                 self.obsubs.pop()
@@ -307,6 +312,8 @@ class TradeTool(object):
             msg = {'type':'cs','amount':self.baseAmount*100*pp,'price':self.bitmexDatas[0][0],'islimit':1,'cid':cid}
             self.bCIDData[cid] = {'msg':msg,'state':0,'type':'coba','sub':[]}
             if self.sendMsgToBitmexTrade('cs', msg):
+                self.lastBitmexTradeTime = int(time.time())
+                # self.lastOkexTradeTime = 0
                 self.okexTradeMsgs.append({'type':'cl','amount':self.baseAmount*pp,'cid':cid})
                 self.bCIDData[cid]['sub'] = list(self.obsubs)
                 self.obsubs = []
@@ -316,6 +323,8 @@ class TradeTool(object):
             msg = {'type':'cs','amount':self.baseAmount*100,'price':self.bitmexDatas[0][0],'islimit':1,'cid':cid}
             self.bCIDData[cid] = {'msg':msg,'state':0,'type':'cob','sub':[]}
             if self.sendMsgToBitmexTrade('cs', msg):
+                self.lastBitmexTradeTime = int(time.time())
+                # self.lastOkexTradeTime = 0
                 self.okexTradeMsgs.append({'type':'cl','amount':self.baseAmount,'cid':cid})
                 if not isReset:
                     if self.obsubs:
@@ -331,6 +340,8 @@ class TradeTool(object):
         msg = {'type':'ol','amount':self.baseAmount*100,'price':self.bitmexDatas[0][0],'islimit':1,'cid':cid}
         self.bCIDData[cid] = {'msg':msg,'state':0,'type':'obo','sub':[]}
         if self.sendMsgToBitmexTrade('ol', msg):
+            self.lastBitmexTradeTime = int(time.time())
+                # self.lastOkexTradeTime = 0
             self.okexTradeMsgs.append({'type':'os','amount':self.baseAmount,'cid':cid})
             if isReset:
                 self.bosubs.pop()
@@ -348,6 +359,8 @@ class TradeTool(object):
             msg = {'type':'cl','amount':self.baseAmount*100*pp,'price':self.bitmexDatas[0][0],'islimit':1,'cid':cid}
             self.bCIDData[cid] = {'msg':msg,'state':0,'type':'cboa','sub':[]}
             if self.sendMsgToBitmexTrade('cl', msg):
+                self.lastBitmexTradeTime = int(time.time())
+                # self.lastOkexTradeTime = 0
                 self.okexTradeMsgs.append({'type':'cs','amount':self.baseAmount*pp,'cid':cid})
                 self.bCIDData[cid]['sub'] = list(self.bosubs)
                 self.bosubs = []
@@ -357,6 +370,8 @@ class TradeTool(object):
             msg = {'type':'cl','amount':self.baseAmount*100,'price':self.bitmexDatas[0][0],'islimit':1,'cid':cid}
             self.bCIDData[cid] = {'msg':msg,'state':0,'type':'cbo','sub':[]}
             if self.sendMsgToBitmexTrade('cl', msg):
+                self.lastBitmexTradeTime = int(time.time())
+                # self.lastOkexTradeTime = 0
                 self.okexTradeMsgs.append({'type':'cs','amount':self.baseAmount,'cid':cid})
                 if not isReset:
                     if self.bosubs:
@@ -396,7 +411,10 @@ class TradeTool(object):
             ntime = (int(time.time()) - self.toolStartTime)/60
             if ntime < self.startDaly:#未达到开始时间
                 isStop = True
-
+        ptime = int(time.time())
+        if ptime - self.lastBitmexTradeTime < 3 or ptime - self.lastOkexTradeTime < 3:
+            #防止出现快速连续下单情况,每一次下新交易对，必须等3秒以上才可以下新单
+            isStop = True
 
         lastOBsub = self.lastSub['ob']['subOB']
         if lastOBsub <= 0:  #bitmex价格高于okex
@@ -823,6 +841,8 @@ class TradeTool(object):
                     isSendOK = self.sendMsgToOkexTrade('cs', msg)
                 if isSendOK:
                     print('okex下单成功已发送')
+                    #self.lastBitmexTradeTime = int(time.time())
+                    self.lastOkexTradeTime = int(time.time())
                 else:
                     print(msg)
                     print('okex下单发送网络错误')
