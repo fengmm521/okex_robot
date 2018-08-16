@@ -442,7 +442,7 @@ class TradeTool(object):
             if isStop:
                 return
 
-            if len(self.obsubs) > 1
+            if len(self.obsubs) > 1:
                 self.closeOB(stepprice,closeAll = True)
             elif abs(lastOBsub/stepprice) > 1.0:
                 c =  abs(lastOBsub/stepprice) - len(self.bosubs)
