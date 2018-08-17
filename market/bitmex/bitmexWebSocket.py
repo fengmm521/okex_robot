@@ -123,11 +123,13 @@ class bitmexWSTool(object):
     def on_close(self,ws):
         self.isWSOpen = False
         print("### closed ###")
+        
+        msg = '{"type":"socket","state":"close"}'
+        self.sendMsgToClient(msg)
+        time.sleep(0.3)
         f = open('sokceterro.txt','w')
         f.write('1')
         f.close()
-        msg = '{"type":"socket","state":"close"}'
-        self.sendMsgToClient(msg)
         time.sleep(10)
         # while not self.isWSOpen:
         #     time.sleep(1)
