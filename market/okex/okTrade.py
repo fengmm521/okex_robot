@@ -175,7 +175,11 @@ class OKFuture:
         params ={}
         params['api_key'] = self.__apikey
         params['sign'] = buildMySign(params,self.__secretkey)
-        return httpPost(self.__url,FUTURE_USERINFO,params)
+        try:
+            res = httpPost(self.__url,FUTURE_USERINFO,params)
+        except Exception as e:
+            res = '{"type":"userinfo","result":false}'
+        return res
 
     #期货全仓持仓信息
     def future_position(self,symbol,contractType):
@@ -229,7 +233,20 @@ class OKFuture:
         if price:
             params['price'] = price
         params['sign'] = buildMySign(params,self.__secretkey)
-        return httpPost(self.__url,FUTURE_TRADE,params)
+        try:
+            res = httpPost(self.__url,FUTURE_TRADE,params)
+        except Exception as e:
+            outtype = ''
+            if tradeType == '1':
+                outtype = 'ol'
+            elif tradeType == '2':
+                outtype = 'os'
+            elif tradeType == '3':
+                outtype = 'cl'
+            elif tradeType == '4':
+                outtype = 'cs'
+            res = '{"type":"trade","result":false,"orderType":"%s","amount":%s,"price":%s}'%(outtype,amount,price)
+        return res
 
     #向数据处理服务器发送消息
     def sendMsgToClient(self,msg):

@@ -134,6 +134,15 @@ class TradeTool(object):
         self.initBitmexTradeSocket()
         self.initBitmexDataSocket()
     
+
+    #获取Okex定单状态和数量
+    def getOkexOrderList(self):
+        pass
+
+    #获取bitmex定单状态和数量
+    def getBitmexOrderList(self):
+        pass
+
     def initOkexTradeSocket(self):
         isErro = False
         try:
@@ -150,6 +159,8 @@ class TradeTool(object):
                         isOK = True
                     except Exception as e:
                         print(data)
+                        if len(data) == 0:
+                            return
                     if isOK:
                         self.onOkexTradeBack(datadic)
             self.okexTradethr = threading.Thread(target=okexTradeRun,args=())
@@ -161,6 +172,7 @@ class TradeTool(object):
             self.okexTradeSocket = None
             isErro =  True
         return (not isErro)
+
     def initOkexDataSocket(self):
         isErro = False
         try:
@@ -182,6 +194,7 @@ class TradeTool(object):
                         print(data)
                         if len(data) == 0:
                             self.okexDataSocket = None
+                            self.isOkexDataOK = False
                             print('okexDataSocket erro')
                             return
 
@@ -216,6 +229,7 @@ class TradeTool(object):
                     else:
                         if len(data) == 0:
                             self.bitmexDataSocket = None
+                            self.isBitmexDataOK = False
                             print('okexDataSocket erro')
                             return
                     
@@ -612,6 +626,7 @@ class TradeTool(object):
     #okex数据
 
     def onOkexData(self,datadic):
+        isOkexRun = True
         if 'type' in datadic:
             if datadic['type'] == 'pong':
                 self.socketstate['od'] = True
@@ -619,7 +634,7 @@ class TradeTool(object):
             elif datadic['type'] == 'socket':
                 if datadic['state'] == 'close':
                     # self.isBitmexDataOK = False
-                    self.isOkexDataOK = False
+                    isOkexRun = False
                 elif datadic['state'] == 'open':
                     self.isOkexDataOK = True
 
@@ -770,25 +785,40 @@ class TradeTool(object):
     #u'channel': u'ok_sub_futureusd_positions'}]
             print(datadic)
         # onOkexData
+        if isOkexRun:
+            self.isOkexDataOK = True
+        else:
+            self.isOkexDataOK = False
+
         self.lastimedic['od'] = int(time.time())
     #交易下单返回状态
     def onOkexTradeBack(self,datadic):
-        if 'type' in datadic and datadic['type'] == 'pong':
-            self.socketstate['ot'] = True
-            print('pong from okex trade http server...')
+        if 'type' in datadic:
+            if datadic['type'] == 'pong':
+                self.socketstate['ot'] = True
+                print('pong from okex trade http server...')
+            elif datadic['type'] == 'trade':
+                if datadic['state'] == 'erro':
+                    #'{"type":"trade","state":"erro","orderType":"%s","amount":%s,"price":%s}'%(outtype,amount,price)
+                    pass
+            elif datadic['type'] == 'userinfo':
+                if datadic['state'] == 'erro':
+                    pass
+
         else:
             print(datadic)
         self.lastimedic['ot'] = int(time.time())
 
     #bitmex数据
     def onBitmexData(self,datadic):
+        isBitmexRun = True
         if 'type' in datadic:
             if datadic['type'] == 'pong':
                 self.socketstate['bd'] = True
                 print('pong from bitmex ws data server...')
             elif datadic['type'] == 'socket':
                 if datadic['state'] == 'close':
-                    self.isBitmexDataOK = False
+                    isBitmexRun = False
                 elif datadic['state'] == 'open':
                     self.isBitmexDataOK = True
         elif 'table' in datadic and datadic['table'] == 'quote':
@@ -835,6 +865,10 @@ class TradeTool(object):
         else:
             print('---other--bitmex--')
             print(datadic)
+        if isBitmexRun:
+            self.isBitmexDataOK = True
+        else:
+            self.isBitmexDataOK = False
         self.lastimedic['bd'] = int(time.time())
 
     #bitmex新增加定单委托
@@ -1024,7 +1058,8 @@ class TradeTool(object):
                 self.initOkexTradeSocket()
                 return False
         except Exception as e:
-            print('服务器端okexDataSocket网络错误1')
+            print('服务器端okexTradeSocket网络错误1')
+            self.initOkexTradeSocket()
             return False
     
     #当有客户端30秒没有接收到数据时就发送ping

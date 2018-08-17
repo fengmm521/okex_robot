@@ -7,9 +7,11 @@ import sys
 import time
 
 def getDataPID():
-    f = open('datapsid.txt','r')
-    pid = f.read()
-    f.close()
+    pid = ''
+    if os.path.exists('datapsid.txt'):
+        f = open('datapsid.txt','r')
+        pid = f.readlines()[1].replace('\n','')
+        f.close()
     return pid
 
 def main():
@@ -19,9 +21,10 @@ def main():
         time.sleep(1)
         if os.path.exists('socketerro.txt'):
             bitmexDataPID = getDataPID()
-            cmd = '/bin/kill %s'%(bitmexDataPID)
-            print(cmd)
-            os.system(cmd)
+            if bitmexDataPID != '':
+                cmd = '/bin/kill %s'%(bitmexDataPID)
+                print(cmd)
+                os.system(cmd)
             time.sleep(0.1)
             if os.path.exists('datapsid.txt'):
                 os.remove('datapsid.txt')
