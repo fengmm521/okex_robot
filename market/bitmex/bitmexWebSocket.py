@@ -5,6 +5,7 @@
 import websocket
 import socket
 import sys
+import os
 import hmac
 import hashlib
 
@@ -45,11 +46,15 @@ class bitmexWSTool(object):
         self.isWSOpen = False
         self.lastPingTime = int(time.time())
 
+        self.removeSocketFlogFile()
+
         self.initWebSocket()
 
         self.sendcount = 100   #每100次log提示一次没有客户端连接
 
-        
+    def removeSocketFlogFile(self):
+        if os.path.exists('sokceterro.txt'):
+            os.remove('sokceterro.txt')
 
     def setSocketClient(self,clientsocket):
         self.csocket = clientsocket
@@ -113,14 +118,19 @@ class bitmexWSTool(object):
         print('-----eoor------')
         print(error)
 
+
+
     def on_close(self,ws):
         self.isWSOpen = False
         print("### closed ###")
+        f = open('sokceterro.txt','w')
+        f.write('1')
+        f.close()
         time.sleep(10)
-        while not self.isWSOpen:
-            time.sleep(1)
-            self.initWebSocket()
-            time.sleep(5)
+        # while not self.isWSOpen:
+        #     time.sleep(1)
+        #     self.initWebSocket()
+        #     time.sleep(5)
 
     def on_open(self,ws):
         self.isWSOpen = True

@@ -50,11 +50,16 @@ class okWSTool():
 
         self.objname = 'okex'
 
+        self.removeSocketFlogFile()
+
         self.initWebSocket()
 
         self.sendcount = 100   #每100次log提示一次没有客户端连接
 
-    
+    def removeSocketFlogFile(self):
+        if os.path.exists('sokceterro.txt'):
+            os.remove('sokceterro.txt')
+
     def setObjName(self,pname):
         self.objname = pname
 
@@ -237,12 +242,16 @@ class okWSTool():
 
     def on_close(self,ws):
         self.isWSOpen = False
-        time.sleep(10)
         print('DISCONNECT')
-        while not self.isWSOpen:
-            time.sleep(10)
-            self.initWebSocket()
-            time.sleep(5)
+        f = open('sokceterro.txt','w')
+        f.write('1')
+        f.close()
+        time.sleep(10)
+        
+        # while not self.isWSOpen:
+        #     time.sleep(10)
+        #     self.initWebSocket()
+        #     time.sleep(5)
 
     #设置客户端websocket
     def initWebSocket(self):

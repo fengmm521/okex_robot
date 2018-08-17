@@ -168,8 +168,19 @@ class TradeTool(object):
             def okexDataRun():
                 while True:
                     data = self.okexDataSocket.recv(100*1024)
-                    datadic = json.loads(data.decode())
-                    self.onOkexData(datadic)
+                    isDataOK = True
+                    try:
+                        datadic = json.loads(data.decode())
+                    except Exception as e:
+                        isDataOK = False
+                    if isDataOK:
+                        self.onOkexData(datadic)
+                    else:
+                        print(data)
+                        if len(data) == 0:
+                            self.okexDataSocket = None
+                            print('okexDataSocket erro')
+                            return
 
             self.okexDatathr = threading.Thread(target=okexDataRun,args=())
             self.okexDatathr.setDaemon(True)
@@ -958,6 +969,7 @@ class TradeTool(object):
                 return False
         except Exception as e:
             print('服务器端okexDataSocket网络错误1')
+            self.initOkexDataSocket()
             return False
 
     # self.initOkexTradeSocket()

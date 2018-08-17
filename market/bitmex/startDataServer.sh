@@ -20,4 +20,9 @@ echo $DATE
 
 cd $basepath
 
-python bitmexDataServer.py
+# python bitmexDataServer.py
+LOG=`nohup python bitmexDataServer.py > log.txt 2>&1 & echo $!`
+# LOG="12345"
+echo $LOG
+OUTSTR=$DATE"\n"$LOG
+echo $OUTSTR > datapsid.txt
