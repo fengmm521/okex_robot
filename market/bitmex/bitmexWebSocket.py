@@ -126,6 +126,8 @@ class bitmexWSTool(object):
         f = open('sokceterro.txt','w')
         f.write('1')
         f.close()
+        msg = '{"type":"socket","state":"close"}'
+        self.sendMsgToClient(msg)
         time.sleep(10)
         # while not self.isWSOpen:
         #     time.sleep(1)
@@ -174,6 +176,8 @@ class bitmexWSTool(object):
         thread.start_new_thread(run, ())
         time.sleep(3)
         self.loginWebSocket()
+        msg = '{"type":"socket","state":"open"}'
+        self.sendMsgToClient(msg)
     def initWebSocket(self):
         websocket.enableTrace(True)
         self.ws = websocket.WebSocketApp(self.wsurl,

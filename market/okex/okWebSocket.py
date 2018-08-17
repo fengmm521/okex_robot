@@ -179,6 +179,8 @@ class okWSTool():
         time.sleep(0.1)
         print('open')
         self.onUserLogin()
+        msg = '{"type":"socket","state":"open"}'
+        self.sendMsgToClient(msg)
         
     def saveDeepList(self):
         out = ''
@@ -243,6 +245,8 @@ class okWSTool():
     def on_close(self,ws):
         self.isWSOpen = False
         print('DISCONNECT')
+        msg = '{"type":"socket","state":"close"}'
+        self.sendMsgToClient(msg)
         f = open('sokceterro.txt','w')
         f.write('1')
         f.close()
