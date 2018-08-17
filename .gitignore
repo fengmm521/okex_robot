@@ -16,3 +16,5 @@ markettest/okex/oktradelog.txt
 markettest/bitmex/deepdata.txt
 market/bitmex/testtrade.txt
 market/okex/log.txt
+market/bitmex/datapsid.txt
+market/bitmex/log.txt

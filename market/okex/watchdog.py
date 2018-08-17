@@ -17,8 +17,12 @@ def getDataPID():
 def main():
     dataPID = getDataPID()
     print('okexDataPID=%s'%(dataPID))
+    delaytime = 600
+    runtime = 0
+    count = 0
     while True:
         time.sleep(1)
+        count += 1
         if os.path.exists('socketerro.txt'):
             dataPID = getDataPID()
             if dataPID != '':
@@ -34,6 +38,10 @@ def main():
             print(cmd)
             os.system(cmd)
             time.sleep(10)
+        if count >= delaytime:
+            runtime += 1
+            print('runing:',runtime)
+            count = 0
 
 if __name__ == '__main__':
     main()
