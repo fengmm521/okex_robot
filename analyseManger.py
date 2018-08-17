@@ -290,6 +290,8 @@ class TradeTool(object):
             # print('-'*20)
             if self.isShowLog:
                 print('ob:',round(self.lastSub['ob']['subOB'],3),self.lastSub['ob']['odeep'],self.lastSub['ob']['bdeep'],'bo:',round(self.lastSub['bo']['subBO'],3),self.lastSub['bo']['odeep'],self.lastSub['bo']['bdeep'],self.lastSub['subtime'])
+                pricelog = 'bmex:(%.2f,%.2f)\nokex:(%.2f,%.2f)'%(self.bitmexDatas[0][0],self.bitmexDatas[1][0],self.okexDatas[0][0],self.okexDatas[1][0])
+                print(pricelog)
             self.tradeTest()
     #初始化交易参数,如单次下单合约值，谁主动成交，谁被动成交,交易手续费等
     def initTraddeConfig(self,conf):
@@ -797,12 +799,40 @@ class TradeTool(object):
             if datadic['type'] == 'pong':
                 self.socketstate['ot'] = True
                 print('pong from okex trade http server...')
-            elif datadic['type'] == 'trade':
-                if datadic['state'] == 'erro':
+            elif datadic['type'] == 'ol':
+                if datadic['data']['result'] == False:
                     #'{"type":"trade","state":"erro","orderType":"%s","amount":%s,"price":%s}'%(outtype,amount,price)
                     pass
-            elif datadic['type'] == 'userinfo':
-                if datadic['state'] == 'erro':
+            elif datadic['type'] == 'cl':
+                if datadic['data']['result'] == False:
+                    #'{"type":"trade","state":"erro","orderType":"%s","amount":%s,"price":%s}'%(outtype,amount,price)
+                    pass
+            elif datadic['type'] == 'os':
+                if datadic['data']['result'] == False:
+                    #'{"type":"trade","state":"erro","orderType":"%s","amount":%s,"price":%s}'%(outtype,amount,price)
+                    pass
+            elif datadic['type'] == 'cs':
+                if datadic['data']['result'] == False:
+                    #'{"type":"trade","state":"erro","orderType":"%s","amount":%s,"price":%s}'%(outtype,amount,price)
+                    pass
+            elif datadic['type'] == 'pos': #返回合约持仓数量
+                if datadic['data']['result'] == False:
+                    #'{"type":"trade","state":"erro","orderType":"%s","amount":%s,"price":%s}'%(outtype,amount,price)
+                    pass
+            elif datadic['type'] == 'cancel':
+                if datadic['data']['result'] == 'erro':
+                    pass
+            elif datadic['type'] == 'account':
+                if datadic['data']['result'] == 'erro':
+                    pass
+            elif datadic['type'] == 'cancelall':
+                if datadic['data']['result'] == 'erro':
+                    pass
+            elif datadic['type'] == 'getID':
+                if datadic['data']['result'] == 'erro':
+                    pass
+            elif datadic['type'] == 'getall':
+                if datadic['data']['result'] == 'erro':
                     pass
 
         else:

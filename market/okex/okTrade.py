@@ -69,7 +69,8 @@ class OKFuture:
                 pmatchPrice = '0'
                 if msgdic['islimit'] == 0:
                     pmatchPrice = '1' #对手价，即市价下单
-                bcmsg = self.future_trade(symbol = 'btc_usd', contractType = 'quarter',price='{:g}'.format(msgdic['price']),amount = str(msgdic['amount']),tradeType = '1',matchPrice = pmatchPrice,leverRate='20')
+                bcmsgdata = self.future_trade(symbol = 'btc_usd', contractType = 'quarter',price='{:g}'.format(msgdic['price']),amount = str(msgdic['amount']),tradeType = '1',matchPrice = pmatchPrice,leverRate='20')
+                bcmsg = '{"type":"ol","cid":"%s","data":%s}'%(msgdic['cid'],bcmsgdata)
         elif msgdic['type'] == 'cl':#平多
             if self.isTest:
                 logstr = '测试平多，数量:%d,价格:%.2f,是否限价单:%d'%(msgdic['amount'],msgdic['price'],msgdic['islimit'])
@@ -80,8 +81,8 @@ class OKFuture:
                 pmatchPrice = '0'
                 if msgdic['islimit'] == 0:
                     pmatchPrice = '1' #对手价，即市价下单
-                bcmsg = self.future_trade(symbol = 'btc_usd', contractType = 'quarter',price='{:g}'.format(msgdic['price']),amount = str(msgdic['amount']),tradeType = '3',matchPrice = pmatchPrice,leverRate='20')
-
+                bcmsgdata = self.future_trade(symbol = 'btc_usd', contractType = 'quarter',price='{:g}'.format(msgdic['price']),amount = str(msgdic['amount']),tradeType = '3',matchPrice = pmatchPrice,leverRate='20')
+                bcmsg = '{"type":"cl","cid":"%s","data":%s}'%(msgdic['cid'],bcmsgdata)
         elif msgdic['type'] == 'os':#开空
             if self.isTest:
                 logstr = '测试开空，数量:%d,价格:%.2f,是否限价单:%d'%(msgdic['amount'],msgdic['price'],msgdic['islimit'])
@@ -92,8 +93,8 @@ class OKFuture:
                 pmatchPrice = '0'
                 if msgdic['islimit'] == 0:
                     pmatchPrice = '1' #对手价，即市价下单
-                bcmsg = self.future_trade(symbol = 'btc_usd', contractType = 'quarter',price='{:g}'.format(msgdic['price']),amount = str(msgdic['amount']),tradeType = '2',matchPrice = pmatchPrice,leverRate='20')
-
+                bcmsgdata = self.future_trade(symbol = 'btc_usd', contractType = 'quarter',price='{:g}'.format(msgdic['price']),amount = str(msgdic['amount']),tradeType = '2',matchPrice = pmatchPrice,leverRate='20')
+                bcmsg = '{"type":"os","cid":"%s","data":%s}'%(msgdic['cid'],bcmsgdata)
         elif msgdic['type'] == 'cs':#平空
             if self.isTest:
                 logstr = '测试平空，数量:%d,价格:%.2f,是否限价单:%d'%(msgdic['amount'],msgdic['price'],msgdic['islimit'])
@@ -104,17 +105,19 @@ class OKFuture:
                 pmatchPrice = '0'
                 if msgdic['islimit'] == 0:
                     pmatchPrice = '1' #对手价，即市价下单
-                bcmsg = self.future_trade(symbol = 'btc_usd', contractType = 'quarter',price='{:g}'.format(msgdic['price']),amount = str(msgdic['amount']),tradeType = '4',matchPrice = pmatchPrice,leverRate='20')
-
+                bcmsgdata = self.future_trade(symbol = 'btc_usd', contractType = 'quarter',price='{:g}'.format(msgdic['price']),amount = str(msgdic['amount']),tradeType = '4',matchPrice = pmatchPrice,leverRate='20')
+                bcmsg = '{"type":"cs","cid":"%s","data":%s}'%(msgdic['cid'],bcmsgdata)
         elif msgdic['type'] == 'getall':#获取所有未成交定单，这里主要是看还有多少未成交的
             # 获取所有定单状态
             # {type:getall}
-            bcmsg = self.future_orderinfo(symbol = 'btc_usd', contractType = 'quarter', orderId = '-1', status = '1', currentPage = '1', pageLength = '20')
+            bcmsgdata = self.future_orderinfo(symbol = 'btc_usd', contractType = 'quarter', orderId = '-1', status = '1', currentPage = '1', pageLength = '20')
+            bcmsg = '{"type":"getall","data":%s}'%(bcmsgdata)
             # pass #返回所有未成交定单数据
         elif msgdic['type'] == 'getID':#获取某个定单的状态,这里主要是看看手续费,成交价
             # 使用定单ID获取定单状态
             # {type:getID,id:123456}
-            bcmsg = self.future_orderinfo(symbol = 'btc_usd', contractType = 'quarter', orderId = str(msgdic['id']), status = '', currentPage = '1', pageLength = '20')
+            bcmsgdata = self.future_orderinfo(symbol = 'btc_usd', contractType = 'quarter', orderId = str(msgdic['id']), status = '', currentPage = '1', pageLength = '20')
+            bcmsg = '{"type":"getID","oid":"%s","data":%s}'%(str(msgdic['id']),bcmsgdata)
             # pass #返回请求定单数据
         elif msgdic['type'] == 'cancelall':#取消所有未成交定单
             # pass
@@ -132,7 +135,8 @@ class OKFuture:
                     for od in bddic['orders']:
                         corderids += str(od['order_id']) + ','
                     corderids = corderids[:-1]
-                    bcmsg = self.future_cancel(symbol = 'btc_usd', contractType = 'quarter', orderId = corderids)
+                    bcmsgdata = self.future_cancel(symbol = 'btc_usd', contractType = 'quarter', orderId = corderids)
+                    bcmsg = '{"type":"cancelall","data":%s}'%(bcmsgdata)
 
         elif msgdic['type'] == 'cancel':#取消某个id定单
             # 取消某个定单
@@ -140,17 +144,28 @@ class OKFuture:
             if self.isTest:
                 bcmsg = 'test_cancel,id=%s'%(str(msgdic['id']))
             else:
-                bcmsg = self.future_cancel(symbol = 'btc_usd', contractType = 'quarter', orderId = str(msgdic['id']))
+                bcmsgdata = self.future_cancel(symbol = 'btc_usd', contractType = 'quarter', orderId = str(msgdic['id']))
+                bcmsg = '{"type":"cancel","oid":"%s","data":%s}'%(str(msgdic['id']),bcmsgdata)
             # pass
         elif msgdic['type'] == 'account':#获取帐户信息,帐户权益和保证金率,主要是看会不会全仓爆仓
             # pass
             bctmpmsg = self.future_userinfo()
             dicttmp = json.loads(bctmpmsg)
+            bcmsgdata = ''
             if dicttmp['result']:
-                bcmsg = bctmpmsg
+                bcmsgdata = bctmpmsg
             elif 'error_code' in dicttmp and dicttmp['error_code'] == 20022:
-                bcmsg = self.future_userinfo_4fix()
+                bcmsgdata = self.future_userinfo_4fix()
+            bcmsg = '{"type":"account","data":%s}'%(bcmsgdata)
 
+        elif msgdic['type'] == 'pos':
+            bctmpmsg = self.future_position(symbol = 'btc_usd', contractType = 'quarter')
+            bcmsgdata = ''
+            if dicttmp['result']:
+                bcmsgdata = bctmpmsg
+            elif 'error_code' in dicttmp and dicttmp['error_code'] == 20022:
+                bcmsgdata = self.future_position_4fix(symbol = 'btc_usd', contractType = 'quarter', type1 = '1')
+            bcmsg = '{"type":"pos","data":%s}'%(bcmsgdata)
         elif msgdic['type'] == 'withdraw':#提现
             if self.isTest:
                 bcmsg = 'test_withdraw'
@@ -178,7 +193,7 @@ class OKFuture:
         try:
             res = httpPost(self.__url,FUTURE_USERINFO,params)
         except Exception as e:
-            res = '{"type":"userinfo","result":false}'
+            res = '{"result":false}'
         return res
 
     #期货全仓持仓信息
@@ -245,7 +260,7 @@ class OKFuture:
                 outtype = 'cl'
             elif tradeType == '4':
                 outtype = 'cs'
-            res = '{"type":"trade","result":false,"orderType":"%s","amount":%s,"price":%s}'%(outtype,amount,price)
+            res = '{"result":false,"orderType":"%s","amount":%s,"price":%s}'%(outtype,amount,price)
         return res
 
     #向数据处理服务器发送消息
@@ -332,6 +347,27 @@ class OKFuture:
         return httpPost(self.__url,FUTURE_INFO_4FIX,params)
 
     #期货逐仓持仓信息
+# buy_amount:多仓数量
+# buy_available:多仓可平仓数量 
+# buy_bond:多仓保证金
+# buy_flatprice:多仓强平价格
+# buy_profit_lossratio:多仓盈亏比
+# buy_price_avg:开仓平均价
+# buy_price_cost:结算基准价
+# buy_profit_real:多仓已实现盈余
+# contract_id:合约id
+# contract_type:合约类型
+# create_date:创建日期
+# sell_amount:空仓数量
+# sell_available:空仓可平仓数量 
+# sell_bond:空仓保证金
+# sell_flatprice:空仓强平价格
+# sell_profit_lossratio:空仓盈亏比
+# sell_price_avg:开仓平均价
+# sell_price_cost:结算基准价
+# sell_profit_real:空仓已实现盈余
+# symbol:btc_usd   ltc_usd    eth_usd    etc_usd    bch_usd
+# lever_rate: 杠杆倍数
     def future_position_4fix(self,symbol,contractType,type1):
         FUTURE_POSITION_4FIX = "/api/v1/future_position_4fix.do?"
         params = {
