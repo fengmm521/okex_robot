@@ -23,7 +23,7 @@ def main():
     while True:
         time.sleep(1)
         count += 1
-        if os.path.exists('socketerro.txt'):
+        if os.path.exists('sokceterro.txt'):
             dataPID = getDataPID()
             if dataPID != '':
                 cmd = '/bin/kill %s'%(dataPID)

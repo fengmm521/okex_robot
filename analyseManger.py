@@ -862,7 +862,7 @@ class TradeTool(object):
         elif 'table' in datadic and datadic['table'] == 'execution': #// 个别成交，可能是多个成交
             print('---execution--bitmex--')
             print(datadic)
-        elif 'table' in datadic and datadic['table'] == 'order': #// 你委托的更新
+        elif 'table' in datadic and datadic['table'] == 'order' and datadic['action'] != 'partial': #// 你委托的更新
             print('---order--bitmex--')
             # {u'action': u'insert', u'table': u'order', u'data': [{u'ordStatus': u'New', u'exDestination': u'XBME', u'text': u'Submitted via API.', u'timeInForce': u'GoodTillCancel', u'currency': u'USD', u'pegPriceType': u'', u'simpleLeavesQty': 0.0158, u'ordRejReason': u'', u'transactTime': u'2018-08-12T23:02:44.540Z', u'clOrdID': u'os-2-1534114964.188801', u'settlCurrency': u'XBt', u'cumQty': 0, u'displayQty': None, u'avgPx': None, u'price': 6340, u'simpleOrderQty': None, u'contingencyType': u'', u'triggered': u'', u'timestamp': u'2018-08-12T23:02:44.540Z', u'symbol': u'XBTUSD', u'pegOffsetValue': None, u'execInst': u'ParticipateDoNotInitiate', u'simpleCumQty': 0, u'orderID': u'13c79094-518a-c95b-fd95-3f090d339e6e', u'multiLegReportingType': u'SingleSecurity', u'account': 278343, u'stopPx': None, u'leavesQty': 100, u'orderQty': 100, u'workingIndicator': False, u'ordType': u'Limit', u'clOrdLinkID': u'', u'side': u'Sell'}]}
             #下单后websocket返回的状态改变数据
