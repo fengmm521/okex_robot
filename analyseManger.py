@@ -123,6 +123,8 @@ class TradeTool(object):
         self.isBitmexDataOK = False
         self.isOkexDataOK = False
 
+        self.subsavefilename = str(int(time.time())) + '_sub.txt'
+
         self.initSocket()
 
     def setLogShow(self,isShowLog):
@@ -277,6 +279,12 @@ class TradeTool(object):
         ltimeStr = str(timetool.timestamp2datetime(timeint,True))   
         return timeint,ltimeStr 
 
+    def saveSubData(self):
+        smsg = 'ob:%.2f,%d,%d,bo:%.2f,%d,%d,%d,%d'%(round(self.lastSub['ob']['subOB'],3),self.lastSub['ob']['odeep'],self.lastSub['ob']['bdeep'],round(self.lastSub['bo']['subBO'],3),self.lastSub['bo']['odeep'],self.lastSub['bo']['bdeep'],self.lastSub['subtime'],int(time.time()))
+        smsg += '|bmex:(%.2f,%.2f),okex:(%.2f,%.2f)\n'%(self.bitmexDatas[0][0],self.bitmexDatas[1][0],self.okexDatas[0][0],self.okexDatas[1][0])
+        f = open(self.subsavefilename,'a')
+        f.write(smsg)
+        f.close()
     def updateDataSub(self):
         #self.okexDatas = []             #买一价，卖一价，接收数据时间
         #self.bitmexDatas = []           #买一价，卖一价, 接收数据时间
@@ -293,6 +301,7 @@ class TradeTool(object):
                 pricelog = 'bmex:(%.2f,%.2f)\nokex:(%.2f,%.2f)'%(self.bitmexDatas[0][0],self.bitmexDatas[1][0],self.okexDatas[0][0],self.okexDatas[1][0])
                 print(pricelog)
             self.tradeTest()
+            self.saveSubData()
     #初始化交易参数,如单次下单合约值，谁主动成交，谁被动成交,交易手续费等
     def initTraddeConfig(self,conf):
         self.tradeConfig = conf

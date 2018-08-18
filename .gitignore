@@ -19,3 +19,5 @@ market/okex/log.txt
 market/bitmex/datapsid.txt
 market/bitmex/log.txt
 market/okex/datapsid.txt
+*_sub.txt
+market/bitmex/testtrade.txt
