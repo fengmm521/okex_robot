@@ -651,9 +651,9 @@ class TradeTool(object):
                     print('bitmex开多正在等成交')
                     # msg = {'type':'cl','amount':self.baseAmount*100,'price':self.bitmexDatas[0][0],'islimit':1,'cid':cid}
                     # self.bCIDData[cid] = {'msg':msg,'state':0,'type':'cbo','subprice':subpurce,'sub':[]}
-                    print(self.bCIDData[self.nowTradeCID]['subprice'],tmpprice-2,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[0][0])
+                    print(self.bCIDData[self.nowTradeCID]['subprice'],lastOBsub-2,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[0][0])
                         
-                    if tmpprice != 0 and (self.bCIDData[self.nowTradeCID]['subprice'] < tmpprice - 2 or self.bitmexDatas[0][0] - self.bCIDData[self.nowTradeCID]['msg']['price'] >= 15):
+                    if tmpprice != 0 and (self.bCIDData[self.nowTradeCID]['subprice'] < lastOBsub - 2 or self.bitmexDatas[0][0] - self.bCIDData[self.nowTradeCID]['msg']['price'] >= 15):
                         #当下单条件不存在了，或者下单价差别比较大时，取消下单
                         
                         # print(self.bCIDData[self.nowTradeCID]['subprice'],tmpprice-2,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[0][0])
@@ -663,9 +663,9 @@ class TradeTool(object):
                         # sayMsg('bitmex开多要取消')
                 elif self.tradeState == 122: #bitmex开空正在等成交
                     print('bitmex开空正在等成交')
-                    print(self.bCIDData[self.nowTradeCID]['subprice'],tmpprice+2,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[1][0])
+                    print(self.bCIDData[self.nowTradeCID]['subprice'],lastOBsub+2,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[1][0])
                         
-                    if tmpprice != 0 and (self.bCIDData[self.nowTradeCID]['subprice'] > tmpprice + 2 or self.bCIDData[self.nowTradeCID]['msg']['price'] - self.bitmexDatas[1][0] >= 15):
+                    if tmpprice != 0 and (self.bCIDData[self.nowTradeCID]['subprice'] > lastOBsub + 2 or self.bCIDData[self.nowTradeCID]['msg']['price'] - self.bitmexDatas[1][0] >= 15):
                         #当下单条件不存在了，或者下单价差别比较大时，取消下单
                         # (-127.27000000000001, -125.27000000000001, 6363.5, 6363.5)
                         # print(self.bCIDData[self.nowTradeCID]['subprice'],tmpprice+2,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[1][0])
@@ -675,7 +675,7 @@ class TradeTool(object):
                         # sayMsg('bitmex开空要取消')
                 elif self.tradeState == 132: #bitmex平多正在等成交
                     print('bitmex平多正在等成交')
-                    print(self.bCIDData[self.nowTradeCID]['subprice'],tmpprice + 2 ,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[1][0])
+                    print(self.bCIDData[self.nowTradeCID]['subprice'],lastOBsub + 2 ,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[1][0])
                        
                     if self.bCIDData[self.nowTradeCID]['type'] == 'cboa' and (self.bCIDData[self.nowTradeCID]['subprice'] > lastOBsub + 2 or self.bCIDData[self.nowTradeCID]['msg']['price'] - self.bitmexDatas[1][0] >= 15):
                         # print(self.bCIDData[self.nowTradeCID]['subprice'],lastOBsub + 2,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[1][0])
@@ -684,7 +684,7 @@ class TradeTool(object):
                             self.tradeState = 133
                             self.cancelOneTrade('bitmex', self.nowTradeCID)
                         # sayMsg('bitmex所有平多要取消')
-                    elif tmpprice != 0 and (self.bCIDData[self.nowTradeCID]['subprice'] > tmpprice + 2 or self.bCIDData[self.nowTradeCID]['msg']['price'] - self.bitmexDatas[1][0] >= 15):
+                    elif tmpprice != 0 and (self.bCIDData[self.nowTradeCID]['subprice'] > lastOBsub + 2 or self.bCIDData[self.nowTradeCID]['msg']['price'] - self.bitmexDatas[1][0] >= 15):
                         #当下单条件不存在了，或者下单价差别比较大时，取消下单
                         # print(self.bCIDData[self.nowTradeCID]['subprice'],tmpprice + 2 ,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[1][0])
                        
@@ -694,7 +694,7 @@ class TradeTool(object):
                         # sayMsg('bitmex平多要取消')
                 elif self.tradeState == 142: #bitmex平空正在等成交
                     print('bitmex平空正在等成交')
-                    print(self.bCIDData[self.nowTradeCID]['subprice'],tmpprice - 2 ,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[0][0])
+                    print(self.bCIDData[self.nowTradeCID]['subprice'],lastOBsub - 2 ,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[0][0])
                        
                     if self.bCIDData[self.nowTradeCID]['type'] == 'coba' and (self.bCIDData[self.nowTradeCID]['subprice'] < lastOBsub - 2 or self.bitmexDatas[0][0] - self.bCIDData[self.nowTradeCID]['msg']['price'] >= 15):
                         # print(self.bCIDData[self.nowTradeCID]['subprice'],tmpprice - 2 ,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[0][0])
@@ -703,7 +703,7 @@ class TradeTool(object):
                             self.tradeState = 143
                             self.cancelOneTrade('bitmex', self.nowTradeCID)
                         # sayMsg('bitmex所有平空要取消')
-                    elif tmpprice != 0 and (self.bCIDData[self.nowTradeCID]['subprice'] < tmpprice - 2 or self.bitmexDatas[0][0] - self.bCIDData[self.nowTradeCID]['msg']['price'] >= 15):
+                    elif tmpprice != 0 and (self.bCIDData[self.nowTradeCID]['subprice'] < lastOBsub - 2 or self.bitmexDatas[0][0] - self.bCIDData[self.nowTradeCID]['msg']['price'] >= 15):
                         #当下单条件不存在了，或者下单价差别比较大时，取消下单
                         # print(self.bCIDData[self.nowTradeCID]['subprice'],tmpprice - 2 ,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[0][0])
                        
@@ -766,7 +766,7 @@ class TradeTool(object):
             if len(self.bosubs) > 1:
                 self.closeBO(lastOBsub,closeAll = True)
             elif abs(lastOBsub/stepprice) > 1.0:
-                c = abs(lastOBsub/stepprice) - len(self.obsubs) - self.baseOB
+                c = abs((lastOBsub+2)/stepprice) - len(self.obsubs) - self.baseOB
                 self.tradecount = len(self.obsubs) + self.baseOB + 1
                 tmpprice = -(self.tradecount)*stepprice
                 if self.showLogCount == 0:
@@ -790,7 +790,7 @@ class TradeTool(object):
             if len(self.obsubs) > 1:
                 self.closeOB(lastOBsub,closeAll = True)
             elif abs(lastOBsub/stepprice) > 1.0:
-                c =  abs(lastOBsub/stepprice) - len(self.bosubs) - self.baseBO
+                c =  abs((lastOBsub-2)/stepprice) - len(self.bosubs) - self.baseBO
                 self.tradecount = len(self.bosubs) + self.baseBO + 1
                 tmpprice = (self.tradecount)*stepprice
                 if self.showLogCount == 0:
