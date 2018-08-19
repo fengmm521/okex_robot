@@ -7,7 +7,7 @@
     "movePercent":0.6,      
     "normTime":3,           
     "reconfigTime":60,      
-    "baseOB":4,
+    "baseOB":5,
     "baseBO":0,
     "basePrice":-5,
     "autoBase":0,
