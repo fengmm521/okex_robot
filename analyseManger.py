@@ -196,6 +196,7 @@ class TradeTool(object):
 
         self.okexOIDDic = {}
 
+        self.showLogCount = 0
 
         self.initSocket()
 
@@ -477,7 +478,6 @@ class TradeTool(object):
                 self.nowTradeCID = cid
                 # self.tradeState = 142 #142.bitmex平空下单已发送，等成交
                 self.lastBitmexTradeTime = int(time.time())
-                # self.lastOkexTradeTime = 0
                 self.okexTradeMsgs.append({'type':'cl','amount':self.baseAmount,'cid':cid})
                 if not isReset:
                     if self.obsubs:
@@ -497,7 +497,6 @@ class TradeTool(object):
             self.nowTradeCID = cid
             # self.tradeState = 112 #112.bitmex开多下单已发送，等成交
             self.lastBitmexTradeTime = int(time.time())
-                # self.lastOkexTradeTime = 0
             self.okexTradeMsgs.append({'type':'os','amount':self.baseAmount,'cid':cid})
             if isReset:
                 self.bosubs.pop()
@@ -519,7 +518,6 @@ class TradeTool(object):
                 self.nowTradeCID = cid
                 # self.tradeState = 132 #132.bitmex平多下单已发送，等成交
                 self.lastBitmexTradeTime = int(time.time())
-                # self.lastOkexTradeTime = 0
                 self.okexTradeMsgs.append({'type':'cs','amount':self.baseAmount*pp,'cid':cid})
                 self.bCIDData[cid]['sub'] = list(self.bosubs)
                 self.bosubs = []
@@ -533,7 +531,6 @@ class TradeTool(object):
                 self.nowTradeCID = cid
                 # self.tradeState = 132 #132.bitmex平多下单已发送，等成交
                 self.lastBitmexTradeTime = int(time.time())
-                # self.lastOkexTradeTime = 0
                 self.okexTradeMsgs.append({'type':'cs','amount':self.baseAmount,'cid':cid})
                 if not isReset:
                     if self.bosubs:
@@ -589,12 +586,13 @@ class TradeTool(object):
         ptime = int(time.time())
         if ptime - self.lastBitmexTradeTime < 3 or ptime - self.lastOkexTradeTime < 3:
             #防止出现快速连续下单情况,每一次下新交易对，必须等3秒以上才可以下新单
+            print('time ...')
             isStop = True
 
 
         lastOBsub = self.lastSub['ob']['subOB'] - self.basePrice
 
-        if self.tradeState != 0:
+        if self.tradeState != 0 and (not isStop):
             print('交易正在进行')
             if self.nowTradeCID != '':
                 if self.tradeState == 112: #bitmex开多正在等成交
@@ -639,28 +637,40 @@ class TradeTool(object):
                         self.cancelOneTrade('okex', self.okexOIDDic[self.nowTradeCID])
             isStop = True
 
+
+        # self.showLogCount -= 1
+
+        # if self.showLogCount < 0:
+        #     self.showLogCount = 10
+        
+
         if lastOBsub <= 0:  #bitmex价格高于okex
             maxprice = self.bitmexDatas[1][0]
             stepprice = maxprice * self.stepPercent
             if self.isShowLog:
-                print('stepprice=%.2f'%(stepprice))
+                print('stepprice=%.2f,%d'%(stepprice,isStop))
             if isStop:
                 return
             if len(self.bosubs) > 1:
                 self.closeBO(lastOBsub,closeAll = True)
             elif abs(lastOBsub/stepprice) > 1.0:
                 c = abs(lastOBsub/stepprice) - len(self.obsubs) - self.baseOB
-                tmpprice = (len(self.obsubs) + self.baseOB)*stepprice
+                tmpprice = -(len(self.obsubs) + self.baseOB + 1)*stepprice
+                if self.showLogCount == 0:
+                    tmpstr = 'last<0,%d,%.3f,%.d,%.2f,s:%.2f,m:%.2f,%.2f'%(len(self.obsubs),c,self.baseOB,lastOBsub,tmpprice + stepprice,tmpprice,stepprice)
+                    print(tmpstr)
                 if c > 1.0:
                     opencount = math.floor(c)
                     self.openOB(tmpprice)
-                elif c < 1.0:
+                elif c < 0:
                     self.closeOB(tmpprice)
+            else:
+                print('other...')
         elif lastOBsub > 0:
             maxprice = self.okexDatas[1][0]
             stepprice = maxprice * self.stepPercent
             if self.isShowLog:
-                print('stepprice=%.2f'%(stepprice))
+                print('stepprice=%.2f,%d'%(stepprice,isStop))
             if isStop:
                 return
 
@@ -668,12 +678,17 @@ class TradeTool(object):
                 self.closeOB(lastOBsub,closeAll = True)
             elif abs(lastOBsub/stepprice) > 1.0:
                 c =  abs(lastOBsub/stepprice) - len(self.bosubs) - self.baseBO
-                tmpprice = (len(self.bosubs) + self.baseBO)*stepprice
+                tmpprice = (len(self.bosubs) + self.baseBO + 1)*stepprice
+                if self.showLogCount == 0:
+                    tmpstr = 'last<0,%d,%.3f,%.d,%.2f,s:%.2f,m:%.2f,%.2f'%(len(self.bosubs),c,self.baseOB,lastOBsub,tmpprice - stepprice,tmpprice,stepprice)
+                    print(tmpstr)
                 if c > 1.0:
                     opencount = math.floor(c)
                     self.openBO(tmpprice)
-                elif c < 1.0:
+                elif c < 0:
                     self.closeBO(tmpprice)
+            else:
+                print('other...')
                 
 
 

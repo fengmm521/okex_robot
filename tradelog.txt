@@ -1,0 +1,1 @@
+{"index": "1", "okex": {"msg": {"amount": 1, "type": "ol", "price": 6252.28, "islimit": 1, "cid": "oob-1-1534647923"}, "state": 0, "cid": "oob-1-1534647923"}, "bitmex": {"msg": {"amount": 100, "type": "os", "price": 6360, "islimit": 1, "cid": "oob-1-1534647923"}, "subprice": 0.0, "state": 2, "type": "oob", "sub": []}, "type": "oob", "time": "1534647923"}
