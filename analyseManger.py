@@ -196,6 +196,8 @@ class TradeTool(object):
 
         self.okexOIDDic = {}
 
+        self.tradecount = 0
+
         self.showLogCount = 0
 
         self.initSocket()
@@ -590,35 +592,53 @@ class TradeTool(object):
 
 
         lastOBsub = self.lastSub['ob']['subOB'] - self.basePrice
-
+        
         if self.tradeState != 0:
-            
+            maxprice = 0
+            stepprice = 0
+            tmpprice = 0
+            if lastOBsub <= 0:
+                maxprice = self.bitmexDatas[1][0]
+                stepprice = maxprice * self.stepPercent
+                tmpprice = -(self.tradecount)*stepprice
+            else:
+                maxprice = self.okexDatas[1][0]
+                stepprice = maxprice * self.stepPercent
+                tmpprice = (self.tradecount)*stepprice
             if self.nowTradeCID != '':
                 if self.tradeState == 112: #bitmex开多正在等成交
                     print('bitmex开多正在等成交')
                     # msg = {'type':'cl','amount':self.baseAmount*100,'price':self.bitmexDatas[0][0],'islimit':1,'cid':cid}
                     # self.bCIDData[cid] = {'msg':msg,'state':0,'type':'cbo','subprice':subpurce,'sub':[]}
-                    if self.bCIDData[self.nowTradeCID]['subprice'] > lastOBsub or self.bitmexDatas[0][0] - self.bCIDData[self.nowTradeCID]['msg']['price'] >= 15:
+
+                    if tmpprice != 0 and (self.bCIDData[self.nowTradeCID]['subprice'] > tmpprice - 2 or self.bitmexDatas[0][0] - self.bCIDData[self.nowTradeCID]['msg']['price'] >= 15):
                         #当下单条件不存在了，或者下单价差别比较大时，取消下单
                         self.tradeState = 113
                         self.cancelOneTrade('bitmex', self.nowTradeCID)
                 elif self.tradeState == 122: #bitmex开空正在等成交
                     print('bitmex开空正在等成交')
-                    if self.bCIDData[self.nowTradeCID]['subprice'] < lastOBsub or self.bCIDData[self.nowTradeCID]['msg']['price'] - self.bitmexDatas[1][0] >= 15:
+                    if tmpprice != 0 and (self.bCIDData[self.nowTradeCID]['subprice'] < tmpprice + 2 or self.bCIDData[self.nowTradeCID]['msg']['price'] - self.bitmexDatas[1][0] >= 15):
                         #当下单条件不存在了，或者下单价差别比较大时，取消下单
                         self.tradeState = 123
                         self.cancelOneTrade('bitmex', self.nowTradeCID)
                 elif self.tradeState == 132: #bitmex平多正在等成交
                     print('bitmex平多正在等成交')
-                    if self.bCIDData[self.nowTradeCID]['subprice'] < lastOBsub or self.bCIDData[self.nowTradeCID]['msg']['price'] - self.bitmexDatas[1][0] >= 15:
+                    if self.bCIDData[self.nowTradeCID]['type'] == 'cboa' and (self.bCIDData[self.nowTradeCID]['subprice'] < lastOBsub + 2 or self.bCIDData[self.nowTradeCID]['msg']['price'] - self.bitmexDatas[1][0] >= 15):
+                        self.tradeState = 133
+                        self.cancelOneTrade('bitmex', self.nowTradeCID)
+
+                    elif tmpprice != 0 and (self.bCIDData[self.nowTradeCID]['subprice'] < tmpprice + 2 or self.bCIDData[self.nowTradeCID]['msg']['price'] - self.bitmexDatas[1][0] >= 15):
                         #当下单条件不存在了，或者下单价差别比较大时，取消下单
                         self.tradeState = 133
                         self.cancelOneTrade('bitmex', self.nowTradeCID)
                 elif self.tradeState == 142: #bitmex平空正在等成交
                     print('bitmex平空正在等成交')
-                    if self.bCIDData[self.nowTradeCID]['subprice'] > lastOBsub or self.bitmexDatas[0][0] - self.bCIDData[self.nowTradeCID]['msg']['price'] >= 15:
+                    if self.bCIDData[self.nowTradeCID]['type'] == 'coba' and (self.bCIDData[self.nowTradeCID]['subprice'] > lastOBsub - 2 or self.bitmexDatas[0][0] - self.bCIDData[self.nowTradeCID]['msg']['price'] >= 15):
+                        self.tradeState = 143
+                        self.cancelOneTrade('bitmex', self.nowTradeCID)
+                    elif tmpprice != 0 and (self.bCIDData[self.nowTradeCID]['subprice'] > tmpprice - 2 or self.bitmexDatas[0][0] - self.bCIDData[self.nowTradeCID]['msg']['price'] >= 15):
                         #当下单条件不存在了，或者下单价差别比较大时，取消下单
-                        self.tradeState = 113
+                        self.tradeState = 143
                         self.cancelOneTrade('bitmex', self.nowTradeCID)
                 if self.tradeState == 212: #okex开多正在等成交
                     print('okex开多正在等成交')
@@ -644,13 +664,11 @@ class TradeTool(object):
                         self.cancelOneTrade('okex', self.okexOIDDic[self.nowTradeCID])
             isStop = True
 
-
         # self.showLogCount -= 1
 
         # if self.showLogCount < 0:
         #     self.showLogCount = 10
         
-
         if lastOBsub <= 0:  #bitmex价格高于okex
             maxprice = self.bitmexDatas[1][0]
             stepprice = maxprice * self.stepPercent
@@ -662,7 +680,8 @@ class TradeTool(object):
                 self.closeBO(lastOBsub,closeAll = True)
             elif abs(lastOBsub/stepprice) > 1.0:
                 c = abs(lastOBsub/stepprice) - len(self.obsubs) - self.baseOB
-                tmpprice = -(len(self.obsubs) + self.baseOB + 1)*stepprice
+                self.tradecount = len(self.obsubs) + self.baseOB + 1
+                tmpprice = -(self.tradecount)*stepprice
                 if self.showLogCount == 0:
                     tmpstr = 'last<0,sub:%.2f,%d,%.3f,%.d,s:%.2f,m:%.2f,%.2f'%(self.lastSub['ob']['subOB'],len(self.obsubs),c,self.baseOB,tmpprice + stepprice + self.basePrice,tmpprice + self.basePrice,stepprice)
                     print(tmpstr)
@@ -685,7 +704,8 @@ class TradeTool(object):
                 self.closeOB(lastOBsub,closeAll = True)
             elif abs(lastOBsub/stepprice) > 1.0:
                 c =  abs(lastOBsub/stepprice) - len(self.bosubs) - self.baseBO
-                tmpprice = (len(self.bosubs) + self.baseBO + 1)*stepprice
+                self.tradecount = len(self.bosubs) + self.baseBO + 1
+                tmpprice = (self.tradecount)*stepprice
                 if self.showLogCount == 0:
                     tmpstr = 'last<0,sub:%.2f,%d,%.3f,%.d,s:%.2f,m:%.2f,%.2f'%(self.lastSub['ob']['subOB'],len(self.bosubs),c,self.baseOB,tmpprice - stepprice + self.basePrice,tmpprice + self.basePrice,stepprice)
                     print(tmpstr)
@@ -1278,6 +1298,7 @@ class TradeTool(object):
                 print('cid is eq:%s'%(data['clOrdID']))
                 ocid = ptype['cid']
                 isSendOK = False
+                self.tradecount = 0
                 msg = {}
                 if ptype['type'] == 'ol':
                     msg = {'type':'ol','amount':ptype['amount'],'price':self.okexDatas[1][0]+5,'islimit':1,'cid':ocid}
