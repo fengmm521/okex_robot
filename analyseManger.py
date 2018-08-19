@@ -27,10 +27,29 @@ import signTool
 
 import orderObj
 
+import platform
+
+def getSysType():
+    sysSystem = platform.system()
+    if sysSystem == 'Windows':  #mac系统
+        return 'win'
+    elif sysSystem == 'Darwin':
+        return 'mac'
+    elif sysSystem == 'Linux':
+        return 'linux'
+
+
 def sayMsg(msg):
-    cmd = 'say %s'%(msg)
-    os.system(cmd)
-    print msg
+    smsg = msg
+    # print smsg
+    if getSysType() == 'mac':
+        def sayTradeRun():
+            cmd = '/usr/bin/say %s'%(smsg)
+            os.system(cmd)
+        sTradethr = threading.Thread(target=sayTradeRun,args=())
+        sTradethr.setDaemon(True)
+        sTradethr.start()
+    
 
 
 class TradeTool(object):
@@ -438,6 +457,8 @@ class TradeTool(object):
         msg = {'type':'os','amount':self.baseAmount*100,'price':self.bitmexDatas[1][0],'islimit':1,'cid':cid}
         self.bCIDData[cid] = {'msg':msg,'state':0,'type':'oob','subprice':subpurce,'sub':[]}
         self.tradeState = 121 #121.bitmex开空正在下单
+        smsg = '开仓OB,bitmex价格为%.1f'%(self.bitmexDatas[1][0])
+        sayMsg(smsg)
         if self.sendMsgToBitmexTrade('os', msg):
             self.nowTradeCID = cid
             # self.tradeState = 122 #5.bitmex开空下单已发送，等成交
@@ -461,6 +482,8 @@ class TradeTool(object):
             msg = {'type':'cs','amount':self.baseAmount*100*pp,'price':self.bitmexDatas[0][0],'islimit':1,'cid':cid}
             self.bCIDData[cid] = {'msg':msg,'state':0,'type':'coba','subprice':subpurce,'sub':[]}
             self.tradeState = 141 #141.bitmex平空正在下单
+            smsg = '所有OB平仓,bitmex价格为%.1f'%(self.bitmexDatas[0][0])
+            sayMsg(smsg)
             if self.sendMsgToBitmexTrade('cs', msg):
                 self.nowTradeCID = cid
                 # self.tradeState = 142 #11.bitmex平空下单已发送，等成交
@@ -475,6 +498,8 @@ class TradeTool(object):
             msg = {'type':'cs','amount':self.baseAmount*100,'price':self.bitmexDatas[0][0],'islimit':1,'cid':cid}
             self.bCIDData[cid] = {'msg':msg,'state':0,'type':'cob','subprice':subpurce,'sub':[]}
             self.tradeState = 141 #141.bitmex平空正在下单
+            smsg = '平仓OB,bitmex价格为%.1f'%(self.bitmexDatas[0][0])
+            sayMsg(smsg)
             if self.sendMsgToBitmexTrade('cs', msg):
                 self.nowTradeCID = cid
                 # self.tradeState = 142 #142.bitmex平空下单已发送，等成交
@@ -494,6 +519,8 @@ class TradeTool(object):
         msg = {'type':'ol','amount':self.baseAmount*100,'price':self.bitmexDatas[0][0],'islimit':1,'cid':cid}
         self.bCIDData[cid] = {'msg':msg,'state':0,'type':'obo','subprice':subpurce,'sub':[]}
         self.tradeState = 111 #111.bitmex开多正在下单
+        smsg = '开仓BO,bitmex价格为%.1f'%(self.bitmexDatas[0][0])
+        sayMsg(smsg)
         if self.sendMsgToBitmexTrade('ol', msg):
             self.nowTradeCID = cid
             # self.tradeState = 112 #112.bitmex开多下单已发送，等成交
@@ -515,6 +542,8 @@ class TradeTool(object):
             msg = {'type':'cl','amount':self.baseAmount*100*pp,'price':self.bitmexDatas[0][0],'islimit':1,'cid':cid}
             self.bCIDData[cid] = {'msg':msg,'state':0,'type':'cboa','subprice':subpurce,'sub':[]}
             self.tradeState = 131 #131.bitmex平多正在下单
+            smsg = '所有BO平仓,bitmex价格为%.1f'%(self.bitmexDatas[0][0])
+            sayMsg(smsg)
             if self.sendMsgToBitmexTrade('cl', msg):
                 self.nowTradeCID = cid
                 # self.tradeState = 132 #132.bitmex平多下单已发送，等成交
@@ -528,6 +557,8 @@ class TradeTool(object):
             msg = {'type':'cl','amount':self.baseAmount*100,'price':self.bitmexDatas[0][0],'islimit':1,'cid':cid}
             self.bCIDData[cid] = {'msg':msg,'state':0,'type':'cbo','subprice':subpurce,'sub':[]}
             self.tradeState = 131 #131.bitmex平多正在下单
+            smsg = '平仓BO,bitmex价格为%.1f'%(self.bitmexDatas[0][0])
+            sayMsg(smsg)
             if self.sendMsgToBitmexTrade('cl', msg):
                 self.nowTradeCID = cid
                 # self.tradeState = 132 #132.bitmex平多下单已发送，等成交
@@ -942,6 +973,8 @@ class TradeTool(object):
                     print('send okex trade ol erro...')
                     time.sleep(1)
                     isSendOK = self.sendMsgToOkexTrade(trademsg['type'], trademsg)
+                smsg = 'okex撤单成功，重新下单并重新下单，价格:%.2f'%(trademsg['price'])
+                sayMsg(smsg)
             elif datadic[0]['data']['status'] == 0:#已下单等成交
                 tradeType = datadic[0]['data']['type']
                 if tradeType == '1':
@@ -974,7 +1007,8 @@ class TradeTool(object):
                 f = open('tradelog.txt','a')
                 f.write(jstr)
                 f.close()
-
+                smsg = 'okex完全成交，真实差价为%s'%(rsub)
+                sayMsg(smsg)
 
 
         elif type(datadic) == list and 'channel' in datadic[0] and datadic[0]['channel'] == 'ok_sub_futureusd_userinfo':
@@ -1303,6 +1337,8 @@ class TradeTool(object):
                 ocid = ptype['cid']
                 isSendOK = False
                 self.tradecount = 0
+                smsg = 'bitmex完全成交'
+                sayMsg(smsg)
                 msg = {}
                 if ptype['type'] == 'ol':
                     msg = {'type':'ol','amount':ptype['amount'],'price':self.okexDatas[1][0]+5,'islimit':1,'cid':ocid}
@@ -1346,6 +1382,8 @@ class TradeTool(object):
                     self.tradeState = 242 #242.okex平空已发送，等成交
                 if isSendOK:
                     print('okex下单成功已发送')
+                    smsg = 'okex下单'
+                    sayMsg(smsg)
                     #self.lastBitmexTradeTime = int(time.time())
                     self.lastOkexTradeTime = int(time.time())
                     if self.baseOB > 0:
@@ -1361,6 +1399,8 @@ class TradeTool(object):
                 else:
                     print(msg)
                     print('okex下单发送网络错误')
+                    smsg = 'okex下单出错'
+                    sayMsg(smsg)
         else:
             print("非交易对下单，完全成交的定单ID为bitmex下单服务器自动生成,")
             print(data)
@@ -1392,6 +1432,8 @@ class TradeTool(object):
             elif tmpobj['type'] == 'cboa' and tmpobj['sub']:
                 self.bosubs = list(tmpobj['sub'])
             self.tradeState = 0 #0.没有下单，可下新单
+            smsg = 'bitmex撤单成功'
+            sayMsg(smsg)
         else:
             print("非交易对下单，已成功取消的定单ID为bitmex下单服务器自动生成,")
             print(self.bCIDData)

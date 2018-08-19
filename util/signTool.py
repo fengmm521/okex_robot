@@ -8,6 +8,17 @@ import os
 import hashlib
 import json
 
+import platform
+
+def getSysType():
+    sysSystem = platform.system()
+    if sysSystem == 'Windows':  #mac系统
+        return 'win'
+    elif sysSystem == 'Darwin':
+        return 'mac'
+    elif sysSystem == 'Linux':
+        return 'linux'
+
 def isSignOK(msgdic,secretkey):
     data = json.dumps(msgdic['data']) + str(msgdic['time']) + secretkey
     csgin = msgdic['sign']
