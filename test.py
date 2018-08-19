@@ -197,6 +197,11 @@ def main():
 
     start_server()
 
+    starttime = time.ctime(int(time.time()))
+    f = open('starttime.txt','w')
+    f.write(starttime)
+    f.close()
+
     while True:
         
         time.sleep(10)
