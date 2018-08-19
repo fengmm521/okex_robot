@@ -192,7 +192,7 @@ class BitMexFuture:
             res = self.client.Order.Order_cancelAll().result()[0]
             print(res)
         else:
-            res = self.client.Order.Order_cancel(orderId).result()[0]
+            res = self.client.Order.Order_cancel(clOrdID = orderId).result()[0]
             print(res)
         if res:
             outs = self.conventTimeWithDict(res[0])

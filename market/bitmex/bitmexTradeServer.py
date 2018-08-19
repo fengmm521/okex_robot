@@ -73,6 +73,7 @@ class Servers(socketserver.StreamRequestHandler):
             #目前数据只验证签名，未作加密处理，后期加入数据加密后传送
             #{"sign":"test3","time":123456,"data":{"a":123}}
             try:
+            # if True:
                 dicdata = json.loads(data)
                 if dicdata['type'] == 'ping':
                     self.request.send('{"type":"pong","erro":"0"}'.encode())

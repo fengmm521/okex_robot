@@ -8,5 +8,9 @@
     "normTime":3,           
     "reconfigTime":60,      
     "baseAmount":1,
-    "startDaly":-1      
+    "startDaly":-1,
+    "baseOB":0,
+    "baseBO":0,
+    "basePrice":-50,
+    "autoBase":0
 }

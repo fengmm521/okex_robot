@@ -217,7 +217,13 @@ class OKFuture:
             'order_id':orderId
         }
         params['sign'] = buildMySign(params,self.__secretkey)
-        return httpPost(self.__url,FUTURE_CANCEL,params)
+        
+        try:
+            res = httpPost(self.__url,FUTURE_CANCEL,params)
+        except Exception as e:
+            outtype = ''
+            res = '{"result":false,"oid":"%s"}'%(orderId)
+        return res
 
     #期货获取订单信息
     def future_orderinfo(self,symbol,contractType,orderId,status,currentPage,pageLength):
@@ -233,6 +239,7 @@ class OKFuture:
         }
         params['sign'] = buildMySign(params,self.__secretkey)
         return httpPost(self.__url,FUTURE_ORDERINFO,params)
+        
     #期货下单
     def future_trade(self,symbol,contractType,price='',amount='',tradeType='',matchPrice='',leverRate=''):
         FUTURE_TRADE = "/api/v1/future_trade.do?"
@@ -249,6 +256,7 @@ class OKFuture:
             params['price'] = price
         params['sign'] = buildMySign(params,self.__secretkey)
         try:
+            # {"type":"ol","cid":"sssss","data":{"result":true,"order_id":1304160027118592}}
             res = httpPost(self.__url,FUTURE_TRADE,params)
         except Exception as e:
             outtype = ''
