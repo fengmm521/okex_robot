@@ -3,14 +3,14 @@
     "pOkexRate":0.0002,     
     "iBiemexRate":0.00075,  
     "pBiemexRate":-0.00025,  
-    "stepPercent":3.5,        
+    "stepPercent":3.2,        
     "movePercent":0.6,      
     "normTime":3,           
     "reconfigTime":60,      
     "baseAmount":1,
     "startDaly":0,
-    "baseOB":3,
+    "baseOB":4,
     "baseBO":0,
-    "basePrice":-20,
+    "basePrice":-5,
     "autoBase":0
 }
