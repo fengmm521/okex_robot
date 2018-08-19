@@ -9,8 +9,8 @@
     "reconfigTime":60,      
     "baseAmount":1,
     "startDaly":0,
-    "baseOB":4,
+    "baseOB":3,
     "baseBO":0,
-    "basePrice":0,
+    "basePrice":-20,
     "autoBase":0
 }

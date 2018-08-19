@@ -139,3 +139,4 @@ os,price:6340.0,amount:100,islimit:1,bc:{"type":"bimex_test_cs"}
 os,price:6337.0,amount:100,islimit:1,bc:{"type":"bimex_test_cs"}
 os,price:6340.5,amount:100,islimit:1,bc:{"type":"bimex_test_cs"}
 os,price:6335.5,amount:100,islimit:1,bc:{"type":"bimex_test_cs"}
+os,price:6364.5,amount:100,islimit:1,bc:{"type":"bimex_test_cs"}
