@@ -40,6 +40,12 @@ def main():
     tradetool = analyseManger.TradeTool(apikeytool.apikeydic,configdic)
 
     delaycount = configdic['reconfigTime']
+
+    starttime = time.ctime(int(time.time()))
+    f = open('starttime.txt','w')
+    f.write(starttime)
+    f.close()
+
     while True:
         
         time.sleep(10)
