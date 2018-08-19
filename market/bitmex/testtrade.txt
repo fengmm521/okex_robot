@@ -140,3 +140,7 @@ os,price:6337.0,amount:100,islimit:1,bc:{"type":"bimex_test_cs"}
 os,price:6340.5,amount:100,islimit:1,bc:{"type":"bimex_test_cs"}
 os,price:6335.5,amount:100,islimit:1,bc:{"type":"bimex_test_cs"}
 os,price:6364.5,amount:100,islimit:1,bc:{"type":"bimex_test_cs"}
+os,price:6381.0,amount:100,islimit:1,bc:{"type":"bimex_test_os"}
+os,price:6434.0,amount:100,islimit:1,bc:{"type":"bimex_test_cs"}
+os,price:6428.0,amount:100,islimit:1,bc:{'orderID': '5d1e4cdb-382e-b920-d7c9-96f7e1e9fbfe', 'clOrdID': 'coba-0-1534686563', 'clOrdLinkID': '', 'account': 278343, 'symbol': 'XBTUSD', 'side': 'Buy', 'simpleOrderQty': None, 'orderQty': 100, 'price': 6428.0, 'displayQty': None, 'stopPx': None, 'pegOffsetValue': None, 'pegPriceType': '', 'currency': 'USD', 'settlCurrency': 'XBt', 'ordType': 'Limit', 'timeInForce': 'GoodTillCancel', 'execInst': 'ParticipateDoNotInitiate', 'contingencyType': '', 'exDestination': 'XBME', 'ordStatus': 'New', 'triggered': '', 'workingIndicator': True, 'ordRejReason': '', 'simpleLeavesQty': 0.0159, 'leavesQty': 100, 'simpleCumQty': 0.0, 'cumQty': 0, 'avgPx': None, 'multiLegReportingType': 'SingleSecurity', 'text': 'Submitted via API.', 'transactTime': 1534686565, 'timestamp': 1534686565}
+os,price:6452.0,amount:100,islimit:1,bc:{"type":"bimex_test_cs"}

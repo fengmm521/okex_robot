@@ -457,7 +457,7 @@ class TradeTool(object):
     def closeOB(self,subpurce,closeAll = False,isReset = False):#平仓,okex卖出，bitmex买入
         if closeAll:
             pp = len(self.obsubs)
-            cid = self.crecteOrderCID('cob')
+            cid = self.crecteOrderCID('coba')
             msg = {'type':'cs','amount':self.baseAmount*100*pp,'price':self.bitmexDatas[0][0],'islimit':1,'cid':cid}
             self.bCIDData[cid] = {'msg':msg,'state':0,'type':'coba','subprice':subpurce,'sub':[]}
             self.tradeState = 141 #141.bitmex平空正在下单
@@ -471,7 +471,7 @@ class TradeTool(object):
                 self.obsubs = []
                 return msg
         else:
-            cid = self.crecteOrderCID('coba')
+            cid = self.crecteOrderCID('cob')
             msg = {'type':'cs','amount':self.baseAmount*100,'price':self.bitmexDatas[0][0],'islimit':1,'cid':cid}
             self.bCIDData[cid] = {'msg':msg,'state':0,'type':'cob','subprice':subpurce,'sub':[]}
             self.tradeState = 141 #141.bitmex平空正在下单
@@ -511,7 +511,7 @@ class TradeTool(object):
     def closeBO(self,subpurce,closeAll = False,isReset = False):#平仓,bitmex卖出,okex买入
         if closeAll:
             pp =len(self.bosubs)
-            cid = self.crecteOrderCID('cbo')
+            cid = self.crecteOrderCID('cboa')
             msg = {'type':'cl','amount':self.baseAmount*100*pp,'price':self.bitmexDatas[0][0],'islimit':1,'cid':cid}
             self.bCIDData[cid] = {'msg':msg,'state':0,'type':'cboa','subprice':subpurce,'sub':[]}
             self.tradeState = 131 #131.bitmex平多正在下单
@@ -524,7 +524,7 @@ class TradeTool(object):
                 self.bosubs = []
                 return msg
         else:
-            cid = self.crecteOrderCID('cboa')
+            cid = self.crecteOrderCID('cbo')
             msg = {'type':'cl','amount':self.baseAmount*100,'price':self.bitmexDatas[0][0],'islimit':1,'cid':cid}
             self.bCIDData[cid] = {'msg':msg,'state':0,'type':'cbo','subprice':subpurce,'sub':[]}
             self.tradeState = 131 #131.bitmex平多正在下单
@@ -593,7 +593,7 @@ class TradeTool(object):
 
         lastOBsub = self.lastSub['ob']['subOB'] - self.basePrice
         
-        if self.tradeState != 0:
+        if self.tradeState != 0 and (not isStop):
             maxprice = 0
             stepprice = 0
             tmpprice = 0
@@ -965,7 +965,11 @@ class TradeTool(object):
                 # orderType + '-' + str(self.boCount) + '-' + str(int(time.time()))
                 harddatas = tmpcid.split('-')
                 #完成一个交易周期，记录交易数据到文件
-                savedic = {'time':harddatas[2],'type':harddatas[0],'index':harddatas[1],'bitmex':bitmexMsg,'okex':okexMsg}
+                rbprice = bitmexMsg['msg']['price']
+                roprice = datadic[0]['data']['price_avg']
+                ramount = okexMsg['msg']['amount']
+                rsub = '%.2f'%(roprice - rbprice)
+                savedic = {'time':harddatas[2],'type':harddatas[0],'index':harddatas[1],'rsub':float(rsub),'rbprice':rbprice,'roprice':roprice,'amount':ramount,'bitmex':bitmexMsg,'okex':okexMsg}
                 jstr = json.dumps(savedic) + '\n'
                 f = open('tradelog.txt','a')
                 f.write(jstr)

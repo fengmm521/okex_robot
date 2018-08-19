@@ -22,3 +22,6 @@ market/okex/datapsid.txt
 *_sub.txt
 market/bitmex/testtrade.txt
 tradestate.py
+market/bitmex/testtrade.txt
+market/okex/datapsid.txt
+tradelog.txt
