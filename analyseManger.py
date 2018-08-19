@@ -637,6 +637,7 @@ class TradeTool(object):
                 stepprice = maxprice * self.stepPercent
                 tmpprice = (self.tradecount)*stepprice
             if self.nowTradeCID != '':
+                isNotCtest = False
                 if self.tradeState == 112: #bitmex开多正在等成交
                     print('bitmex开多正在等成交')
                     # msg = {'type':'cl','amount':self.baseAmount*100,'price':self.bitmexDatas[0][0],'islimit':1,'cid':cid}
@@ -644,55 +645,89 @@ class TradeTool(object):
 
                     if tmpprice != 0 and (self.bCIDData[self.nowTradeCID]['subprice'] > tmpprice - 2 or self.bitmexDatas[0][0] - self.bCIDData[self.nowTradeCID]['msg']['price'] >= 15):
                         #当下单条件不存在了，或者下单价差别比较大时，取消下单
-                        self.tradeState = 113
-                        self.cancelOneTrade('bitmex', self.nowTradeCID)
+                        
+                        print(self.bCIDData[self.nowTradeCID]['subprice'],tmpprice-2,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[0][0])
+                        if isNotCtest:
+                            self.tradeState = 113
+                            self.cancelOneTrade('bitmex', self.nowTradeCID)
+                        sayMsg('bitmex开多要取消')
                 elif self.tradeState == 122: #bitmex开空正在等成交
                     print('bitmex开空正在等成交')
                     if tmpprice != 0 and (self.bCIDData[self.nowTradeCID]['subprice'] < tmpprice + 2 or self.bCIDData[self.nowTradeCID]['msg']['price'] - self.bitmexDatas[1][0] >= 15):
                         #当下单条件不存在了，或者下单价差别比较大时，取消下单
-                        self.tradeState = 123
-                        self.cancelOneTrade('bitmex', self.nowTradeCID)
+                        print(self.bCIDData[self.nowTradeCID]['subprice'],tmpprice+2,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[1][0])
+                        if isNotCtest:
+                            self.tradeState = 123
+                            self.cancelOneTrade('bitmex', self.nowTradeCID)
+                        sayMsg('bitmex开空要取消')
                 elif self.tradeState == 132: #bitmex平多正在等成交
                     print('bitmex平多正在等成交')
                     if self.bCIDData[self.nowTradeCID]['type'] == 'cboa' and (self.bCIDData[self.nowTradeCID]['subprice'] < lastOBsub + 2 or self.bCIDData[self.nowTradeCID]['msg']['price'] - self.bitmexDatas[1][0] >= 15):
-                        self.tradeState = 133
-                        self.cancelOneTrade('bitmex', self.nowTradeCID)
-
+                        print(self.bCIDData[self.nowTradeCID]['subprice'],lastOBsub + 2,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[1][0])
+                       
+                        if isNotCtest:
+                            self.tradeState = 133
+                            self.cancelOneTrade('bitmex', self.nowTradeCID)
+                        sayMsg('bitmex所有平多要取消')
                     elif tmpprice != 0 and (self.bCIDData[self.nowTradeCID]['subprice'] < tmpprice + 2 or self.bCIDData[self.nowTradeCID]['msg']['price'] - self.bitmexDatas[1][0] >= 15):
                         #当下单条件不存在了，或者下单价差别比较大时，取消下单
-                        self.tradeState = 133
-                        self.cancelOneTrade('bitmex', self.nowTradeCID)
+                        print(self.bCIDData[self.nowTradeCID]['subprice'],tmpprice + 2 ,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[1][0])
+                       
+                        if isNotCtest:
+                            self.tradeState = 133
+                            self.cancelOneTrade('bitmex', self.nowTradeCID)
+                        sayMsg('bitmex平多要取消')
                 elif self.tradeState == 142: #bitmex平空正在等成交
                     print('bitmex平空正在等成交')
                     if self.bCIDData[self.nowTradeCID]['type'] == 'coba' and (self.bCIDData[self.nowTradeCID]['subprice'] > lastOBsub - 2 or self.bitmexDatas[0][0] - self.bCIDData[self.nowTradeCID]['msg']['price'] >= 15):
-                        self.tradeState = 143
-                        self.cancelOneTrade('bitmex', self.nowTradeCID)
+                        print(self.bCIDData[self.nowTradeCID]['subprice'],tmpprice - 2 ,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[0][0])
+                       
+                        if isNotCtest:
+                            self.tradeState = 143
+                            self.cancelOneTrade('bitmex', self.nowTradeCID)
+                        sayMsg('bitmex所有平空要取消')
                     elif tmpprice != 0 and (self.bCIDData[self.nowTradeCID]['subprice'] > tmpprice - 2 or self.bitmexDatas[0][0] - self.bCIDData[self.nowTradeCID]['msg']['price'] >= 15):
                         #当下单条件不存在了，或者下单价差别比较大时，取消下单
-                        self.tradeState = 143
-                        self.cancelOneTrade('bitmex', self.nowTradeCID)
+                        print(self.bCIDData[self.nowTradeCID]['subprice'],tmpprice - 2 ,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[0][0])
+                       
+                        if isNotCtest:
+                            self.tradeState = 143
+                            self.cancelOneTrade('bitmex', self.nowTradeCID)
+                        sayMsg('bitmex平空要取消')
                 if self.tradeState == 212: #okex开多正在等成交
                     print('okex开多正在等成交')
                     # msg = {'type':'cl','amount':datadic['data']['amount'],'price':self.okexDatas[0][0]-5,'islimit':1,'cid':datadic['data']['cid']}
                     # self.oCIDData[datadic['cid']] = {'msg':msg,'state':0,'cid':datadic['cid']}
                     if self.okexDatas[0][0] - self.oCIDData[self.nowTradeCID]['msg']['price'] > 3:
-                        self.tradeState = 213
-                        self.cancelOneTrade('okex', self.okexOIDDic[self.nowTradeCID])
+                        print(self.okexDatas[0][0],self.oCIDData[self.nowTradeCID]['msg']['price'])
+                        if isNotCtest:
+                            self.tradeState = 213
+                            self.cancelOneTrade('okex', self.okexOIDDic[self.nowTradeCID])
+                        sayMsg('okex开多要取消')
                 elif self.tradeState == 222: #okex开空正在等成交
                     print('okex开空正在等成交')
                     if self.oCIDData[self.nowTradeCID]['msg']['price'] - self.okexDatas[1][0]  > 3:
-                        self.tradeState = 223
-                        self.cancelOneTrade('okex', self.okexOIDDic[self.nowTradeCID])
+                        print(self.okexDatas[1][0],self.oCIDData[self.nowTradeCID]['msg']['price'])
+                        if isNotCtest:
+                            self.tradeState = 223
+                            self.cancelOneTrade('okex', self.okexOIDDic[self.nowTradeCID])
+                        sayMsg('okex开空要取消')
                 elif self.tradeState == 232: #okex平多正在等成交
                     print('okex平多正在等成交')
                     if self.oCIDData[self.nowTradeCID]['msg']['price'] - self.okexDatas[1][0]  > 3:
-                        self.tradeState = 223
-                        self.cancelOneTrade('okex', self.okexOIDDic[self.nowTradeCID])
+                        print(self.okexDatas[1][0],self.oCIDData[self.nowTradeCID]['msg']['price'])
+                        if isNotCtest:
+                            self.tradeState = 223
+                            self.cancelOneTrade('okex', self.okexOIDDic[self.nowTradeCID])
+                        sayMsg('okex平多要取消')
                 elif self.tradeState == 242: #okex平空正在等成交
                     print('okex平空正在等成交')
                     if self.okexDatas[0][0] - self.oCIDData[self.nowTradeCID]['msg']['price'] > 3:
-                        self.tradeState = 213
-                        self.cancelOneTrade('okex', self.okexOIDDic[self.nowTradeCID])
+                        print(self.okexDatas[0][0],self.oCIDData[self.nowTradeCID]['msg']['price'])
+                        if isNotCtest:
+                            self.tradeState = 213
+                            self.cancelOneTrade('okex', self.okexOIDDic[self.nowTradeCID])
+                        sayMsg('okex平空要取消')
             isStop = True
 
         # self.showLogCount -= 1
