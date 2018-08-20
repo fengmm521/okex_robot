@@ -26,3 +26,4 @@ LOG=`nohup python okexDataServer.py > log.txt 2>&1 & echo $!`
 echo $LOG
 OUTSTR=$DATE"\n"$LOG
 echo $OUTSTR > datapsid.txt
+

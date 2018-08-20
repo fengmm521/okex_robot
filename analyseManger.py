@@ -406,7 +406,7 @@ class TradeTool(object):
                 pricelog = 'bmex:(%.2f,%.2f)\nokex:(%.2f,%.2f)'%(self.bitmexDatas[0][0],self.bitmexDatas[1][0],self.okexDatas[0][0],self.okexDatas[1][0])
                 print(pricelog)
             self.tradeTest()
-            self.saveSubData()
+            # self.saveSubData()
     #初始化交易参数,如单次下单合约值，谁主动成交，谁被动成交,交易手续费等
     def initTraddeConfig(self,conf):
         self.tradeConfig = conf
@@ -1001,36 +1001,39 @@ class TradeTool(object):
             print(datadic)
             if datadic[0]['data']['status'] == -1:#撤单
                 odata = datadic[0]['data']
-                tmpcid = self.okexOIDDic[str(odata['orderid'])]
-                # msg = {'type':'ol','amount':datadic['data']['amount'],'price':self.okexDatas[1][0]+5,'islimit':1,'cid':ocid}
-                # self.oCIDData = {'msg':msg,'state':0,'cid':datadic['data']['cid']}
-                trademsg = self.oCIDData[tmpcid]['msg']
-                #重新按市价设置将临价格
-                if trademsg['type'] == 'ol' or trademsg['type'] == 'cs':
-                    trademsg['price'] = self.okexDatas[1][0]+5
-                elif trademsg['type'] == 'os' or trademsg['type'] == 'cl':
-                    trademsg['price'] = self.okexDatas[0][0]-5
+                if str(odata['orderid']) in self.okexOIDDic:
+                    tmpcid = self.okexOIDDic[str(odata['orderid'])]
+                    # msg = {'type':'ol','amount':datadic['data']['amount'],'price':self.okexDatas[1][0]+5,'islimit':1,'cid':ocid}
+                    # self.oCIDData = {'msg':msg,'state':0,'cid':datadic['data']['cid']}
+                    trademsg = self.oCIDData[tmpcid]['msg']
+                    #重新按市价设置将临价格
+                    if trademsg['type'] == 'ol' or trademsg['type'] == 'cs':
+                        trademsg['price'] = self.okexDatas[1][0]+5
+                    elif trademsg['type'] == 'os' or trademsg['type'] == 'cl':
+                        trademsg['price'] = self.okexDatas[0][0]-5
 
-                if self.tradeState > 200 and self.tradeState%10 == 3:
-                    self.tradeState = self.tradeState - 2 #213,223,233,243加2后个位数都会变成5,okex撤单成功，重新下单
-                else:
-                    print('self.tradeState erro:%d'%(self.tradeState))
-                    if trademsg['type'] == 'ol':
-                        self.tradeState = 211
-                    elif trademsg['type'] == 'os':
-                        self.tradeState = 221
-                    elif trademsg['type'] == 'cl':
-                        self.tradeState = 231
-                    elif trademsg['type'] == 'cs':
-                        self.tradeState = 241
-                self.oCIDData[tmpcid] = {'msg':trademsg,'state':0,'cid':tmpcid}
-                isSendOK = self.sendMsgToOkexTrade(trademsg['type'], trademsg)
-                while not isSendOK:
-                    print('send okex trade ol erro...')
-                    time.sleep(1)
+                    if self.tradeState > 200 and self.tradeState%10 == 3:
+                        self.tradeState = self.tradeState - 2 #213,223,233,243加2后个位数都会变成5,okex撤单成功，重新下单
+                    else:
+                        print('self.tradeState erro:%d'%(self.tradeState))
+                        if trademsg['type'] == 'ol':
+                            self.tradeState = 211
+                        elif trademsg['type'] == 'os':
+                            self.tradeState = 221
+                        elif trademsg['type'] == 'cl':
+                            self.tradeState = 231
+                        elif trademsg['type'] == 'cs':
+                            self.tradeState = 241
+                    self.oCIDData[tmpcid] = {'msg':trademsg,'state':0,'cid':tmpcid}
                     isSendOK = self.sendMsgToOkexTrade(trademsg['type'], trademsg)
-                smsg = 'okex撤单成功，重新下单并重新下单，价格:%.2f'%(trademsg['price'])
-                sayMsg(smsg)
+                    while not isSendOK:
+                        print('send okex trade ol erro...')
+                        time.sleep(1)
+                        isSendOK = self.sendMsgToOkexTrade(trademsg['type'], trademsg)
+                    smsg = 'okex撤单成功，重新下单并重新下单，价格:%.2f'%(trademsg['price'])
+                    sayMsg(smsg)
+                else:
+                    print('手动撤单。。。')
             elif datadic[0]['data']['status'] == 0:#已下单等成交
                 tradeType = datadic[0]['data']['type']
                 if tradeType == '1':
