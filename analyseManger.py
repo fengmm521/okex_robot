@@ -222,6 +222,8 @@ class TradeTool(object):
         self.isCloseBaseOB = False
         self.isCloseBaseBO = False
 
+        self.bitmexTradeStartTime = 0
+
         self.initSocket()
 
     def setLogShow(self,isShowLog):
@@ -462,6 +464,8 @@ class TradeTool(object):
         self.tradeState = 121 #121.bitmex开空正在下单
         smsg = '开仓OB,bitmex价格为%.1f'%(self.bitmexDatas[1][0])
         sayMsg(smsg)
+        if self.bitmexTradeStartTime == 0:
+            self.bitmexTradeStartTime = int(time.time())
         if self.sendMsgToBitmexTrade('os', msg):
             self.nowTradeCID = cid
             # self.tradeState = 122 #5.bitmex开空下单已发送，等成交
@@ -487,6 +491,8 @@ class TradeTool(object):
             self.tradeState = 141 #141.bitmex平空正在下单
             smsg = '所有OB平仓,bitmex价格为%.1f'%(self.bitmexDatas[0][0])
             sayMsg(smsg)
+            if self.bitmexTradeStartTime == 0:
+                self.bitmexTradeStartTime = int(time.time())
             if self.sendMsgToBitmexTrade('cs', msg):
                 self.nowTradeCID = cid
                 # self.tradeState = 142 #11.bitmex平空下单已发送，等成交
@@ -503,6 +509,8 @@ class TradeTool(object):
             self.tradeState = 141 #141.bitmex平空正在下单
             smsg = '平仓OB,bitmex价格为%.1f'%(self.bitmexDatas[0][0])
             sayMsg(smsg)
+            if self.bitmexTradeStartTime == 0:
+                self.bitmexTradeStartTime = int(time.time())
             if self.sendMsgToBitmexTrade('cs', msg):
                 self.nowTradeCID = cid
                 # self.tradeState = 142 #142.bitmex平空下单已发送，等成交
@@ -526,6 +534,8 @@ class TradeTool(object):
         self.tradeState = 111 #111.bitmex开多正在下单
         smsg = '开仓BO,bitmex价格为%.1f'%(self.bitmexDatas[0][0])
         sayMsg(smsg)
+        if self.bitmexTradeStartTime == 0:
+                self.bitmexTradeStartTime = int(time.time())
         if self.sendMsgToBitmexTrade('ol', msg):
             self.nowTradeCID = cid
             # self.tradeState = 112 #112.bitmex开多下单已发送，等成交
@@ -549,6 +559,8 @@ class TradeTool(object):
             self.tradeState = 131 #131.bitmex平多正在下单
             smsg = '所有BO平仓,bitmex价格为%.1f'%(self.bitmexDatas[0][0])
             sayMsg(smsg)
+            if self.bitmexTradeStartTime == 0:
+                self.bitmexTradeStartTime = int(time.time())
             if self.sendMsgToBitmexTrade('cl', msg):
                 self.nowTradeCID = cid
                 # self.tradeState = 132 #132.bitmex平多下单已发送，等成交
@@ -564,6 +576,8 @@ class TradeTool(object):
             self.tradeState = 131 #131.bitmex平多正在下单
             smsg = '平仓BO,bitmex价格为%.1f'%(self.bitmexDatas[0][0])
             sayMsg(smsg)
+            if self.bitmexTradeStartTime == 0:
+                self.bitmexTradeStartTime = int(time.time())
             if self.sendMsgToBitmexTrade('cl', msg):
                 self.nowTradeCID = cid
                 # self.tradeState = 132 #132.bitmex平多下单已发送，等成交
@@ -643,10 +657,16 @@ class TradeTool(object):
                 maxprice = self.okexDatas[1][0]
                 stepprice = maxprice * self.stepPercent
                 tmpprice = (self.tradecount)*stepprice
+            
             if self.nowTradeCID != '':
                 isNotCtest = False
                 tmplogstr = 'tradestate:%d'%(self.tradeState)
                 print(tmplogstr)
+                # if self.bitmexTradeStartTime > 100 and ptime - self.bitmexTradeStartTime > 30 and self.tradeState < 200 and self.tradeState%10 == 1:
+                #     print('bitmex下单错误,服务器30秒内未回应,bitmex下单失败')
+                #     if self.nowTradeCID != '':
+                #     self.bitmexTradeStartTime = 0
+
                 if self.tradeState == 112: #bitmex开多正在等成交
                     print('bitmex开多正在等成交')
                     # msg = {'type':'cl','amount':self.baseAmount*100,'price':self.bitmexDatas[0][0],'islimit':1,'cid':cid}
@@ -1448,7 +1468,6 @@ class TradeTool(object):
                     print('okex下单成功已发送')
                     smsg = 'okex下单'
                     sayMsg(smsg)
-                    #self.lastBitmexTradeTime = int(time.time())
                     self.lastOkexTradeTime = int(time.time())
                     if self.baseOB > 0 and self.isCloseBaseOB:
                         self.isCloseBaseOB = False
@@ -1471,6 +1490,7 @@ class TradeTool(object):
             print("非交易对下单，完全成交的定单ID为bitmex下单服务器自动生成,")
             print(data)
 
+    
     #当bitmex定单取消成功
     def onBitmexOrderCancelOK(self,data):
         if data['clOrdID'] in self.bCIDData:
@@ -1510,10 +1530,48 @@ class TradeTool(object):
         if 'type' in datadic and datadic['type'] == 'pong':
             self.socketstate['bt'] = True
             print('pong from bitmex trade http server...')
+        elif 'servererro' in datadic:
+            print('bitmex下单交易服务器返回错误')
+            print(datadic['servererro'])
+            self.onBitmexTradeServerErro(datadic['data'])
         else:
             print(datadic)
-
+            
         self.lastimedic['bt'] = int(time.time())
+
+    #bitmex下单出错，对错误进行处理
+    def onBitmexTradeServerErro(self,tdata):
+        # {"data": {"amount": 100, "type": "os", "price": 6462.5, "islimit": 1, "cid": "oob-1-1534784579"}, "sign": "2B304F1249175C2A960F8D3034A2B9EA290BAD812902810C15409406EEC9EB82", "type": "os", "time": 1534784579}
+        senddata = tdata['data']
+        self.nowTradeCID = ''
+        tmpobj = self.bCIDData.pop(senddata['cid'])
+        msg = tmpobj['msg']
+        deln  = -1
+        for n in range(len(self.okexTradeMsgs)):
+            d = self.okexTradeMsgs[n]
+            if d['cid'] == msg['cid']:
+                deln = n
+                break
+        if deln >= 0:
+            self.okexTradeMsgs.pop(deln)
+        if tmpobj['type'] == 'oob':
+            self.obsubs.pop()
+        elif tmpobj['type'] == 'cob' and tmpobj['sub']:
+            self.obsubs.append(tmpobj['sub'][0])
+        elif tmpobj['type'] == 'obo':
+            self.bosubs.pop()
+        elif tmpobj['type'] == 'cbo' and tmpobj['sub']:
+            self.bosubs.append(tmpobj['sub'][0])
+        elif tmpobj['type'] == 'coba' and tmpobj['sub']:
+            self.obsubs = list(tmpobj['sub'])
+        elif tmpobj['type'] == 'cboa' and tmpobj['sub']:
+            self.bosubs = list(tmpobj['sub'])
+        self.tradeState = 0 #0.没有下单，可下新单
+        self.lastBitmexTradeTime = int(time.time()) + 2   #等5秒后才会重新下单，因为默认是等3秒，这里加2秒记等3秒后再会重新开始下单
+        smsg = 'bitmex下单错误'
+        sayMsg(smsg)
+
+
 
 
     

@@ -88,6 +88,9 @@ class Servers(socketserver.StreamRequestHandler):
                 print('trade data erro:')
                 print(e)
                 print(data)
+                erromsg = {"servererro":str(e),"data":dicdata}
+                backmsg = json.dumps(erromsg)
+                self.request.send(backmsg.encode())
                 
             
 
