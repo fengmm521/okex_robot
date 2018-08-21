@@ -784,6 +784,7 @@ class TradeTool(object):
                             self.tradeState = 213
                             self.cancelOneTrade('okex', self.okexOIDDic[self.nowTradeCID])
                         # sayMsg('okex平空要取消')
+                print('\n')
             isStop = True
 
         # self.showLogCount -= 1
@@ -802,7 +803,7 @@ class TradeTool(object):
                 showlogtmp = ' | '.join(self.priceWinlog)
                 sys.stdout.writelines(showlogtmp)
                 sys.stdout.flush()
-                # self.priceWinlog = []
+                self.priceWinlog = []
                 return
             if len(self.bosubs) > 1:
                 self.closeBO(priceOBSellSub,closeAll = True)
@@ -823,7 +824,7 @@ class TradeTool(object):
                     # print('\r',str(10-i).ljust(10),end='') #python 3使用的方法
                     # print('\r',tmpstr.ljust(100))
                     sys.stdout.flush()
-                    # self.priceWinlog = []
+                    self.priceWinlog = []
                 if c > 1.0:
                     opencount = math.floor(c)
                     self.openOB(priceOBSellSub)
