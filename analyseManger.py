@@ -81,6 +81,7 @@ class TradeTool(object):
         self.baseBO = 0             #初始BO仓位
         self.basePrice=0          #基础手动下单价格
         self.autoBase = 0           #是否开始24小时基础差价自动调整,0:不开启,1:开启
+        self.dalyPrice = 0          #撤单允许波动价范围
 
         self.isInitOnce = True
 
@@ -429,6 +430,7 @@ class TradeTool(object):
             self.isInitOnce = False
         self.basePrice = self.tradeConfig['basePrice']
         self.autoBase = self.tradeConfig['autoBase'] 
+        self.dalyPrice = self.tradeConfig['dalyPrice'] 
 
     #生成用户自定义定单ID
     def crecteOrderCID(self,orderType):
@@ -661,7 +663,9 @@ class TradeTool(object):
                 tmpprice = (self.tradecount)*stepprice
             
             if self.nowTradeCID != '':
-                isNotCtest = False
+                isNotCtest = True
+                # delyprice = 2
+
                 tmplogstr = 'tradestate:%d'%(self.tradeState)
                 print(tmplogstr)
                 # if self.bitmexTradeStartTime > 100 and ptime - self.bitmexTradeStartTime > 30 and self.tradeState < 200 and self.tradeState%10 == 1:
@@ -673,9 +677,9 @@ class TradeTool(object):
                     print('bitmex开多正在等成交')
                     # msg = {'type':'cl','amount':self.baseAmount*100,'price':self.bitmexDatas[0][0],'islimit':1,'cid':cid}
                     # self.bCIDData[cid] = {'msg':msg,'state':0,'type':'cbo','subprice':subpurce,'sub':[]}
-                    print(self.bCIDData[self.nowTradeCID]['subprice'],priceOBBuySub + 2,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[0][0])
+                    print(self.bCIDData[self.nowTradeCID]['subprice'],priceOBBuySub + self.dalyPrice,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[0][0])
                         
-                    if tmpprice != 0 and (self.bCIDData[self.nowTradeCID]['subprice'] > priceOBBuySub + 2 or self.bitmexDatas[0][0] - self.bCIDData[self.nowTradeCID]['msg']['price'] >= 10):
+                    if self.bCIDData[self.nowTradeCID]['subprice'] > priceOBBuySub + self.dalyPrice or self.bitmexDatas[0][0] - self.bCIDData[self.nowTradeCID]['msg']['price'] >= 10:
                         #当下单条件不存在了，或者下单价差别比较大时，取消下单
                         
                         # print(self.bCIDData[self.nowTradeCID]['subprice'],tmpprice-2,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[0][0])
@@ -685,9 +689,9 @@ class TradeTool(object):
                         # sayMsg('bitmex开多要取消')
                 elif self.tradeState == 122: #bitmex开空正在等成交
                     print('bitmex开空正在等成交')
-                    print(self.bCIDData[self.nowTradeCID]['subprice'],priceOBSellSub - 2,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[1][0])
+                    print(self.bCIDData[self.nowTradeCID]['subprice'],priceOBSellSub - self.dalyPrice,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[1][0])
                         
-                    if tmpprice != 0 and (self.bCIDData[self.nowTradeCID]['subprice'] < priceOBSellSub - 2  or self.bCIDData[self.nowTradeCID]['msg']['price'] - self.bitmexDatas[1][0] >= 10):
+                    if self.bCIDData[self.nowTradeCID]['subprice'] < priceOBSellSub - self.dalyPrice  or self.bCIDData[self.nowTradeCID]['msg']['price'] - self.bitmexDatas[1][0] >= 10:
                         #当下单条件不存在了，或者下单价差别比较大时，取消下单
                         # (-127.27000000000001, -125.27000000000001, 6363.5, 6363.5)
                         # print(self.bCIDData[self.nowTradeCID]['subprice'],tmpprice+2,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[1][0])
@@ -697,16 +701,16 @@ class TradeTool(object):
                         # sayMsg('bitmex开空要取消')
                 elif self.tradeState == 132: #bitmex平多正在等成交
                     print('bitmex平多正在等成交')
-                    print(self.bCIDData[self.nowTradeCID]['subprice'],priceOBSellSub -2 ,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[1][0])
+                    print(self.bCIDData[self.nowTradeCID]['subprice'],priceOBSellSub -self.dalyPrice ,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[1][0])
                        
-                    if self.bCIDData[self.nowTradeCID]['type'] == 'cboa' and (self.bCIDData[self.nowTradeCID]['subprice'] < priceOBSellSub -2 or self.bCIDData[self.nowTradeCID]['msg']['price'] - self.bitmexDatas[1][0] >= 10):
+                    if self.bCIDData[self.nowTradeCID]['type'] == 'cboa' and (self.bCIDData[self.nowTradeCID]['subprice'] < priceOBSellSub -self.dalyPrice or self.bCIDData[self.nowTradeCID]['msg']['price'] - self.bitmexDatas[1][0] >= 10):
                         # print(self.bCIDData[self.nowTradeCID]['subprice'],lastOBsub + 2,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[1][0])
                        
                         if isNotCtest:
                             self.tradeState = 133
                             self.cancelOneTrade('bitmex', self.nowTradeCID)
                         # sayMsg('bitmex所有平多要取消')
-                    elif tmpprice != 0 and (self.bCIDData[self.nowTradeCID]['subprice'] < priceOBSellSub -2 or self.bCIDData[self.nowTradeCID]['msg']['price'] - self.bitmexDatas[1][0] >= 10):
+                    elif self.bCIDData[self.nowTradeCID]['subprice'] < priceOBSellSub -self.dalyPrice or self.bCIDData[self.nowTradeCID]['msg']['price'] - self.bitmexDatas[1][0] >= 10:
                         #当下单条件不存在了，或者下单价差别比较大时，取消下单
                         # print(self.bCIDData[self.nowTradeCID]['subprice'],tmpprice + 2 ,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[1][0])
                        
@@ -716,16 +720,16 @@ class TradeTool(object):
                         # sayMsg('bitmex平多要取消')
                 elif self.tradeState == 142: #bitmex平空正在等成交
                     print('bitmex平空正在等成交')
-                    print(self.bCIDData[self.nowTradeCID]['subprice'],priceOBBuySub + 2 ,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[0][0])
+                    print(self.bCIDData[self.nowTradeCID]['subprice'],priceOBBuySub + self.dalyPrice ,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[0][0])
                        
-                    if self.bCIDData[self.nowTradeCID]['type'] == 'coba' and (self.bCIDData[self.nowTradeCID]['subprice'] > priceOBBuySub + 2 or self.bitmexDatas[0][0] - self.bCIDData[self.nowTradeCID]['msg']['price'] >= 10):
+                    if self.bCIDData[self.nowTradeCID]['type'] == 'coba' and (self.bCIDData[self.nowTradeCID]['subprice'] > priceOBBuySub + self.dalyPrice or self.bitmexDatas[0][0] - self.bCIDData[self.nowTradeCID]['msg']['price'] >= 10):
                         # print(self.bCIDData[self.nowTradeCID]['subprice'],tmpprice - 2 ,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[0][0])
                        
                         if isNotCtest:
                             self.tradeState = 143
                             self.cancelOneTrade('bitmex', self.nowTradeCID)
                         # sayMsg('bitmex所有平空要取消')
-                    elif tmpprice != 0 and (self.bCIDData[self.nowTradeCID]['subprice'] > priceOBBuySub +2 or self.bitmexDatas[0][0] - self.bCIDData[self.nowTradeCID]['msg']['price'] >= 10):
+                    elif self.bCIDData[self.nowTradeCID]['subprice'] > priceOBBuySub +self.dalyPrice or self.bitmexDatas[0][0] - self.bCIDData[self.nowTradeCID]['msg']['price'] >= 10:
                         #当下单条件不存在了，或者下单价差别比较大时，取消下单
                         # print(self.bCIDData[self.nowTradeCID]['subprice'],tmpprice - 2 ,self.bCIDData[self.nowTradeCID]['msg']['price'],self.bitmexDatas[0][0])
                        
