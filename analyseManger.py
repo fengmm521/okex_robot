@@ -225,6 +225,9 @@ class TradeTool(object):
 
         self.bitmexTradeStartTime = 0
 
+        self.priceWinlog = []
+        self.maxStrlen = 0
+
         self.initSocket()
 
     def setLogShow(self,isShowLog):
@@ -405,9 +408,15 @@ class TradeTool(object):
             self.lastSub['subtime'] = self.okexDatas[2] - self.bitmexDatas[2]
             # print('-'*20)
             if self.isShowLog:
-                print('ob:',round(self.lastSub['ob']['subOB'],3),self.lastSub['ob']['odeep'],self.lastSub['ob']['bdeep'],'bo:',round(self.lastSub['bo']['subBO'],3),self.lastSub['bo']['odeep'],self.lastSub['bo']['bdeep'],self.lastSub['subtime'])
-                pricelog = 'bmex:(%.2f,%.2f)\nokex:(%.2f,%.2f)'%(self.bitmexDatas[0][0],self.bitmexDatas[1][0],self.okexDatas[0][0],self.okexDatas[1][0])
-                print(pricelog)
+                # print('ob:',round(self.lastSub['ob']['subOB'],3),self.lastSub['ob']['odeep'],self.lastSub['ob']['bdeep'],'bo:',round(self.lastSub['bo']['subBO'],3),self.lastSub['bo']['odeep'],self.lastSub['bo']['bdeep'],self.lastSub['subtime'])
+                pricelog0 = 'ob:%f,%d,%d,bo:%f,%d,%d,%d'%(round(self.lastSub['ob']['subOB'],3),self.lastSub['ob']['odeep'],self.lastSub['ob']['bdeep'],round(self.lastSub['bo']['subBO'],3),self.lastSub['bo']['odeep'],self.lastSub['bo']['bdeep'],self.lastSub['subtime'])
+                lenstrcount = len(pricelog0)
+                if lenstrcount > self.maxStrlen:
+                    self.maxStrlen = lenstrcount
+                pricelog0 = pricelog0.ljust(self.maxStrlen, ' ')
+                pricelog = 'bmex:(%.2f,%.2f) | okex:(%.2f,%.2f)'%(self.bitmexDatas[0][0],self.bitmexDatas[1][0],self.okexDatas[0][0],self.okexDatas[1][0])
+                # print(pricelog)
+                self.priceWinlog = [pricelog,pricelog0]
             self.tradeTest()
             # self.saveSubData()
     #初始化交易参数,如单次下单合约值，谁主动成交，谁被动成交,交易手续费等
@@ -785,9 +794,15 @@ class TradeTool(object):
         if lastOBsub <= 0:  #bitmex价格高于okex
             maxprice = self.bitmexDatas[1][0]
             stepprice = maxprice * self.stepPercent
-            if self.isShowLog:
-                print('stepprice=%.2f,%d'%(stepprice,isStop))
+            if self.isShowLog and isStop:
+                tmplog2 = 'stepprice=%.2f,%d'%(stepprice,isStop)
+                self.priceWinlog.insert(-2,tmplog2)
+
             if isStop:
+                showlogtmp = ' | '.join(self.priceWinlog)
+                sys.stdout.writelines(showlogtmp)
+                sys.stdout.flush()
+                # self.priceWinlog = []
                 return
             if len(self.bosubs) > 1:
                 self.closeBO(priceOBSellSub,closeAll = True)
@@ -797,11 +812,18 @@ class TradeTool(object):
                 tmpprice = -(self.tradecount)*stepprice
                 if self.showLogCount == 0:
                     tmpstr = 'last<0,sub:%.2f,%d,%.3f,%.d,s:%.2f,m:%.2f,%.2f'%(self.lastSub['ob']['subOB'],len(self.obsubs),c,self.baseOB,tmpprice + 2*stepprice + self.basePrice,tmpprice + self.basePrice,stepprice)
-                    tmpstr = '\r' + tmpstr
-                    print(tmpstr)
-                    # print('\r',str(10-i).ljust(10),end='')
+                    # tmpstr = '\r' + tmpstr
+                    if self.priceWinlog:
+                        self.priceWinlog.insert(-2, tmpstr)
+                        tmpstr = '\r' + ' | '.join(self.priceWinlog)
+                    else:
+                        tmpstr = '\r' + tmpstr
+                    
+                    sys.stdout.writelines(tmpstr)
+                    # print('\r',str(10-i).ljust(10),end='') #python 3使用的方法
                     # print('\r',tmpstr.ljust(100))
                     sys.stdout.flush()
+                    # self.priceWinlog = []
                 if c > 1.0:
                     opencount = math.floor(c)
                     self.openOB(priceOBSellSub)
@@ -972,7 +994,7 @@ class TradeTool(object):
         if 'type' in datadic:
             if datadic['type'] == 'pong':
                 self.socketstate['od'] = True
-                print('pong from okex ws data server...')
+                # print('pong from okex ws data server...')
             elif datadic['type'] == 'socket':
                 if datadic['state'] == 'close':
                     # self.isBitmexDataOK = False
@@ -1213,7 +1235,7 @@ class TradeTool(object):
         if 'type' in datadic:
             if datadic['type'] == 'pong':
                 self.socketstate['ot'] = True
-                print('pong from okex trade http server...')
+                # print('pong from okex trade http server...')
             elif datadic['type'] == 'ol':
                 if datadic['data']['result'] == False:
                     #'{"type":"trade","state":"erro","orderType":"%s","amount":%s,"price":%s}'%(outtype,amount,price)
@@ -1332,7 +1354,7 @@ class TradeTool(object):
         if 'type' in datadic:
             if datadic['type'] == 'pong':
                 self.socketstate['bd'] = True
-                print('pong from bitmex ws data server...')
+                # print('pong from bitmex ws data server...')
             elif datadic['type'] == 'socket':
                 if datadic['state'] == 'close':
                     isBitmexRun = False
@@ -1540,7 +1562,7 @@ class TradeTool(object):
     def onBitmexTradeBack(self,datadic):
         if 'type' in datadic and datadic['type'] == 'pong':
             self.socketstate['bt'] = True
-            print('pong from bitmex trade http server...')
+            # print('pong from bitmex trade http server...')
         elif 'servererro' in datadic:
             print('bitmex下单交易服务器返回错误')
             print(datadic['servererro'])
