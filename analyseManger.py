@@ -1242,8 +1242,11 @@ class TradeTool(object):
                     #'{"type":"trade","state":"erro","orderType":"%s","amount":%s,"price":%s}'%(outtype,amount,price)
                     
                     #okex开多失败，要求重新开多,刚在1秒后重新发送开多
-                    msg = {'type':'ol','amount':datadic['data']['amount'],'price':self.okexDatas[1][0]+5,'islimit':1,'cid':ocid}
+                    msg = {'type':'ol','amount':datadic['data']['amount'],'price':self.okexDatas[1][0]+5,'islimit':1,'cid':datadic['cid']}
                     self.oCIDData[datadic['cid']] = {'msg':msg,'state':0,'cid':datadic['cid']}
+                    
+                    sayMsg('okex开多失败,1秒后重开多')
+                    print(datadic)
                     time.sleep(1)
                     self.tradeState = 211 #211.okex开多正在下单
                     isSendOK = self.sendMsgToOkexTrade('ol', msg)
@@ -1261,8 +1264,10 @@ class TradeTool(object):
             elif datadic['type'] == 'cl':
                 if datadic['data']['result'] == False:
                     #'{"type":"trade","state":"erro","orderType":"%s","amount":%s,"price":%s}'%(outtype,amount,price)
-                    msg = {'type':'cl','amount':datadic['data']['amount'],'price':self.okexDatas[0][0]-5,'islimit':1,'cid':datadic['data']['cid']}
+                    msg = {'type':'cl','amount':datadic['data']['amount'],'price':self.okexDatas[0][0]-5,'islimit':1,'cid':datadic['cid']}
                     self.oCIDData[datadic['cid']] = {'msg':msg,'state':0,'cid':datadic['cid']}
+                    sayMsg('okex平多失败,1秒后重平多')
+                    print(datadic)
                     time.sleep(1) #延时1秒后重新下单
                     self.tradeState = 231 #231.okex平多正在下单
                     isSendOK = self.sendMsgToOkexTrade('cl', msg)
@@ -1277,8 +1282,11 @@ class TradeTool(object):
             elif datadic['type'] == 'os':
                 if datadic['data']['result'] == False:
                     #'{"type":"trade","state":"erro","orderType":"%s","amount":%s,"price":%s}'%(outtype,amount,price)
-                    msg = {'type':'os','amount':ptype['amount'],'price':self.okexDatas[0][0]-5,'islimit':1,'cid':ocid}
+                    msg = {'type':'os','amount':ptype['amount'],'price':self.okexDatas[0][0]-5,'islimit':1,'cid':datadic['cid']}
                     self.oCIDData[datadic['cid']] = {'msg':msg,'state':0,'cid':datadic['cid']}
+                    sayMsg('okex开空失败,1秒后重开空')
+                    print(datadic)
+                    time.sleep(1)
                     self.tradeState = 221 #221.okex开空正在下单
                     isSendOK = self.sendMsgToOkexTrade('os', msg)
                     while not isSendOK:
@@ -1292,8 +1300,12 @@ class TradeTool(object):
             elif datadic['type'] == 'cs':
                 if datadic['data']['result'] == False:
                     #'{"type":"trade","state":"erro","orderType":"%s","amount":%s,"price":%s}'%(outtype,amount,price)
-                    msg = {'type':'cs','amount':datadic['data']['amount'],'price':self.okexDatas[1][0]+5,'islimit':1,'cid':datadic['data']['cid']}
+                    msg = {'type':'cs','amount':datadic['data']['amount'],'price':self.okexDatas[1][0]+5,'islimit':1,'cid':datadic['cid']}
                     self.oCIDData[datadic['cid']] = {'msg':msg,'state':0,'cid':datadic['cid']}
+                    
+                    sayMsg('okex平空失败,1秒后重平空')
+                    print(datadic)
+                    time.sleep(1)
                     self.tradeState = 241 #241.okex平空正在下单
                     isSendOK = self.sendMsgToOkexTrade('cs', msg)
                     while not isSendOK:
@@ -1359,8 +1371,10 @@ class TradeTool(object):
             elif datadic['type'] == 'socket':
                 if datadic['state'] == 'close':
                     isBitmexRun = False
+                    sayMsg('bitmex数据服务器关闭')
                 elif datadic['state'] == 'open':
                     self.isBitmexDataOK = True
+                    sayMsg('bitmex数据服务器关闭')
         elif 'table' in datadic and datadic['table'] == 'quote':
             datas = datadic['data']
             timeint,timestr = self.timeconvent(datas[-1]['timestamp'])
