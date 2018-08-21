@@ -797,7 +797,11 @@ class TradeTool(object):
                 tmpprice = -(self.tradecount)*stepprice
                 if self.showLogCount == 0:
                     tmpstr = 'last<0,sub:%.2f,%d,%.3f,%.d,s:%.2f,m:%.2f,%.2f'%(self.lastSub['ob']['subOB'],len(self.obsubs),c,self.baseOB,tmpprice + 2*stepprice + self.basePrice,tmpprice + self.basePrice,stepprice)
+                    tmpstr = '\r' + tmpstr
                     print(tmpstr)
+                    # print('\r',str(10-i).ljust(10),end='')
+                    # print('\r',tmpstr.ljust(100))
+                    sys.stdout.flush()
                 if c > 1.0:
                     opencount = math.floor(c)
                     self.openOB(priceOBSellSub)
