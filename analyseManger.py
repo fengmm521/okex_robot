@@ -152,6 +152,8 @@ class TradeTool(object):
         self.isBitmexDataOK = False
         self.isOkexDataOK = False
 
+        self.isBitmexTradeOK = False
+        self.isOkexTradeOK = False
 
         self.subsavefilename = str(int(time.time())) + '_sub.txt'
 
@@ -1058,33 +1060,36 @@ class TradeTool(object):
                     tmpcid = self.okexOIDDic[str(odata['orderid'])]
                     # msg = {'type':'ol','amount':datadic['data']['amount'],'price':self.okexDatas[1][0]+5,'islimit':1,'cid':ocid}
                     # self.oCIDData = {'msg':msg,'state':0,'cid':datadic['data']['cid']}
-                    trademsg = self.oCIDData[tmpcid]['msg']
-                    #重新按市价设置将临价格
-                    if trademsg['type'] == 'ol' or trademsg['type'] == 'cs':
-                        trademsg['price'] = self.okexDatas[1][0]+5
-                    elif trademsg['type'] == 'os' or trademsg['type'] == 'cl':
-                        trademsg['price'] = self.okexDatas[0][0]-5
+                    if tmpcid != 'sssss':
+                        trademsg = self.oCIDData[tmpcid]['msg']
+                        #重新按市价设置将临价格
+                        if trademsg['type'] == 'ol' or trademsg['type'] == 'cs':
+                            trademsg['price'] = self.okexDatas[1][0]+5
+                        elif trademsg['type'] == 'os' or trademsg['type'] == 'cl':
+                            trademsg['price'] = self.okexDatas[0][0]-5
 
-                    if self.tradeState > 200 and self.tradeState%10 == 3:
-                        self.tradeState = self.tradeState - 2 #213,223,233,243加2后个位数都会变成5,okex撤单成功，重新下单
-                    else:
-                        print('self.tradeState erro:%d'%(self.tradeState))
-                        if trademsg['type'] == 'ol':
-                            self.tradeState = 211
-                        elif trademsg['type'] == 'os':
-                            self.tradeState = 221
-                        elif trademsg['type'] == 'cl':
-                            self.tradeState = 231
-                        elif trademsg['type'] == 'cs':
-                            self.tradeState = 241
-                    self.oCIDData[tmpcid] = {'msg':trademsg,'state':0,'cid':tmpcid}
-                    isSendOK = self.sendMsgToOkexTrade(trademsg['type'], trademsg)
-                    while not isSendOK:
-                        print('send okex trade ol erro...')
-                        time.sleep(1)
+                        if self.tradeState > 200 and self.tradeState%10 == 3:
+                            self.tradeState = self.tradeState - 2 #213,223,233,243加2后个位数都会变成5,okex撤单成功，重新下单
+                        else:
+                            print('self.tradeState erro:%d'%(self.tradeState))
+                            if trademsg['type'] == 'ol':
+                                self.tradeState = 211
+                            elif trademsg['type'] == 'os':
+                                self.tradeState = 221
+                            elif trademsg['type'] == 'cl':
+                                self.tradeState = 231
+                            elif trademsg['type'] == 'cs':
+                                self.tradeState = 241
+                        self.oCIDData[tmpcid] = {'msg':trademsg,'state':0,'cid':tmpcid}
                         isSendOK = self.sendMsgToOkexTrade(trademsg['type'], trademsg)
-                    smsg = 'okex撤单成功，重新下单并重新下单，价格:%.2f'%(trademsg['price'])
-                    sayMsg(smsg)
+                        while not isSendOK:
+                            print('send okex trade ol erro...')
+                            time.sleep(1)
+                            isSendOK = self.sendMsgToOkexTrade(trademsg['type'], trademsg)
+                        smsg = 'okex撤单成功，重新下单并重新下单，价格:%.2f'%(trademsg['price'])
+                        sayMsg(smsg)
+                    else:
+                        print('测试定单')
                 else:
                     print('手动撤单。。。')
             elif datadic[0]['data']['status'] == 0:#已下单等成交
@@ -1245,7 +1250,7 @@ class TradeTool(object):
                     msg = {'type':'ol','amount':datadic['data']['amount'],'price':self.okexDatas[1][0]+5,'islimit':1,'cid':datadic['cid']}
                     self.oCIDData[datadic['cid']] = {'msg':msg,'state':0,'cid':datadic['cid']}
                     
-                    sayMsg('okex开多失败,1秒后重开多')
+                    # sayMsg('okex开多失败,1秒后重开多')
                     print(datadic)
                     time.sleep(1)
                     self.tradeState = 211 #211.okex开多正在下单
@@ -1266,7 +1271,7 @@ class TradeTool(object):
                     #'{"type":"trade","state":"erro","orderType":"%s","amount":%s,"price":%s}'%(outtype,amount,price)
                     msg = {'type':'cl','amount':datadic['data']['amount'],'price':self.okexDatas[0][0]-5,'islimit':1,'cid':datadic['cid']}
                     self.oCIDData[datadic['cid']] = {'msg':msg,'state':0,'cid':datadic['cid']}
-                    sayMsg('okex平多失败,1秒后重平多')
+                    # sayMsg('okex平多失败,1秒后重平多')
                     print(datadic)
                     time.sleep(1) #延时1秒后重新下单
                     self.tradeState = 231 #231.okex平多正在下单

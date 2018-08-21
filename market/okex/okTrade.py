@@ -259,6 +259,7 @@ class OKFuture:
             # {"type":"ol","cid":"sssss","data":{"result":true,"order_id":1304160027118592}}
             res = httpPost(self.__url,FUTURE_TRADE,params)
         except Exception as e:
+            print(e)
             outtype = ''
             if tradeType == '1':
                 outtype = 'ol'
