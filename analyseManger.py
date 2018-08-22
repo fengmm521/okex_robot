@@ -38,14 +38,20 @@ def getSysType():
     elif sysSystem == 'Linux':
         return 'linux'
 
+saylist = []
 
 def sayMsg(msg):
     smsg = msg
     # print smsg
     if getSysType() == 'mac':
+        saylist.append(smsg)
+        if len(saylist) > 5:
+            saylist = saylist[-5:]
         def sayTradeRun():
-            cmd = '/usr/bin/say %s'%(smsg)
-            os.system(cmd)
+            while saylist:
+                tmpmsg = saylist.pop(0)
+                cmd = '/usr/bin/say %s'%(smsg)
+                os.system(cmd)
         sTradethr = threading.Thread(target=sayTradeRun,args=())
         sTradethr.setDaemon(True)
         sTradethr.start()
@@ -409,8 +415,14 @@ class TradeTool(object):
         #self.bitmexDatas = []           #买一价，卖一价, 接收数据时间
         #self.lastSub = []               #okex的卖一价和bitmex的买一价的差价，bitmex的卖一价和okex的买一价的差价,时间差,最后接收时间
         if self.okexDatas and self.bitmexDatas:
-            self.lastSub['ob'] = {'subOB':self.okexDatas[1][0] - self.bitmexDatas[0][0],'odeep':self.okexDatas[1][1],'bdeep':self.bitmexDatas[0][1]}
-            self.lastSub['bo'] = {'subBO':self.bitmexDatas[1][0] - self.okexDatas[0][0],'odeep':self.okexDatas[0][1],'bdeep':self.bitmexDatas[1][1]}
+            # priceOBSellSub = self.okexDatas[1][0] - self.bitmexDatas[1][0]
+            # priceOBBuySub = self.okexDatas[0][0] - self.bitmexDatas[0][0]
+        
+            # self.lastSub['ob'] = {'subOB':self.okexDatas[1][0] - self.bitmexDatas[0][0],'odeep':self.okexDatas[1][1],'bdeep':self.bitmexDatas[0][1]}
+            # self.lastSub['bo'] = {'subBO':self.bitmexDatas[1][0] - self.okexDatas[0][0],'odeep':self.okexDatas[0][1],'bdeep':self.bitmexDatas[1][1]}
+            self.lastSub['ob'] = {'subOB':self.okexDatas[0][0] - self.bitmexDatas[0][0],'odeep':self.okexDatas[0][1],'bdeep':self.bitmexDatas[0][1]}
+            self.lastSub['bo'] = {'subBO':self.okexDatas[1][0] - self.bitmexDatas[1][0],'odeep':self.okexDatas[1][1],'bdeep':self.bitmexDatas[1][1]}
+            
             self.lastSub['otime'] = self.okexDatas[2]
             self.lastSub['btime'] = self.bitmexDatas[2]
             self.lastSub['subtime'] = self.okexDatas[2] - self.bitmexDatas[2]
