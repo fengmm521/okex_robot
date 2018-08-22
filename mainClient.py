@@ -114,16 +114,16 @@ class Servers(socketserver.StreamRequestHandler):
                 msg = {'type':'cs','amount':tradetool.baseAmount,'price':1000.0,'islimit':1,'cid':'sssss'}
                 tradetool.sendMsgToOkexTrade('cs', msg)
             elif data == 'bitmexol':
-                msg = {'type':'ol','amount':tradetool.baseAmount,'price':1000.0,'islimit':1,'cid':''}
+                msg = {'type':'ol','amount':tradetool.baseAmount,'price':1000.0,'islimit':1,'cid':'sssss'}
                 tradetool.sendMsgToBitmexTrade('ol', msg)
             elif data == 'bitmexos':
-                msg = {'type':'os','amount':tradetool.baseAmount,'price':20000.0,'islimit':1,'cid':''}
+                msg = {'type':'os','amount':tradetool.baseAmount,'price':20000.0,'islimit':1,'cid':'sssss'}
                 tradetool.sendMsgToBitmexTrade('os', msg)
             elif data == 'bitmexcl':
-                msg = {'type':'cl','amount':tradetool.baseAmount,'price':20000.0,'islimit':1,'cid':''}
+                msg = {'type':'cl','amount':tradetool.baseAmount,'price':20000.0,'islimit':1,'cid':'sssss'}
                 tradetool.sendMsgToBitmexTrade('cl', msg)
             elif data == 'bitmexcs':
-                msg = {'type':'cs','amount':tradetool.baseAmount,'price':1000.0,'islimit':1,'cid':''}
+                msg = {'type':'cs','amount':tradetool.baseAmount,'price':1000.0,'islimit':1,'cid':'sssss'}
                 tradetool.sendMsgToBitmexTrade('cs', msg)
             elif data == 'getalloride':
                 tradetool.getAllTrade()

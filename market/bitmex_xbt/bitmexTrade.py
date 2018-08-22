@@ -317,19 +317,19 @@ class BitMexFuture:
         return outs
 
     #OKCoin期货市场深度信息
-    def future_depth(self,size = 2,symbol = 'XBT',contractType = self.mType): 
-        if symbol == 'XBT':
-            if contractType == 'XBTUSD':
-                #https://www.bitmex.com/api/v1/orderBook/L2?symbol=xbt&depth=2
-                res = self.client.OrderBook.OrderBook_getL2(symbol=symbol,depth=size).result()
-                return res[0]
-            else:
-                print('合约交易类型%s不可用:'%(contractType))
+    # def future_depth(self,size = 2,symbol = 'XBT',contractType = self.mType): 
+    #     if symbol == 'XBT':
+    #         if contractType == 'XBTUSD':
+    #             #https://www.bitmex.com/api/v1/orderBook/L2?symbol=xbt&depth=2
+    #             res = self.client.OrderBook.OrderBook_getL2(symbol=symbol,depth=size).result()
+    #             return res[0]
+    #         else:
+    #             print('合约交易类型%s不可用:'%(contractType))
 
-        else:
-            print('市场类型%s不可用:'%(symbol))
+    #     else:
+    #         print('市场类型%s不可用:'%(symbol))
 
-        return None
+        # return None
     
     
 

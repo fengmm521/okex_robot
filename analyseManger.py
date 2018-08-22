@@ -44,14 +44,12 @@ def sayMsg(msg):
     smsg = msg
     # print smsg
     if getSysType() == 'mac':
-        saylist.append(smsg)
-        if len(saylist) > 5:
-            saylist = saylist[-5:]
+        # saylist.append(smsg)
+        # if len(saylist) > 5:
+        #     saylist = saylist[-5:]
         def sayTradeRun():
-            while saylist:
-                tmpmsg = saylist.pop(0)
-                cmd = '/usr/bin/say %s'%(smsg)
-                os.system(cmd)
+            cmd = '/usr/bin/say %s'%(smsg)
+            os.system(cmd)
         sTradethr = threading.Thread(target=sayTradeRun,args=())
         sTradethr.setDaemon(True)
         sTradethr.start()
@@ -1640,6 +1638,11 @@ class TradeTool(object):
         # {"data": {"amount": 100, "type": "os", "price": 6462.5, "islimit": 1, "cid": "oob-1-1534784579"}, "sign": "2B304F1249175C2A960F8D3034A2B9EA290BAD812902810C15409406EEC9EB82", "type": "os", "time": 1534784579}
         senddata = tdata['data']
         self.nowTradeCID = ''
+        if senddata['cid'] == 'sssss':
+            print('测试手动下单，服务器错误')
+            print(tdata)
+            self.clearCache()
+            return
         tmpobj = self.bCIDData.pop(senddata['cid'])
         msg = tmpobj['msg']
         deln  = -1

@@ -25,3 +25,8 @@ tradestate.py
 market/bitmex/testtrade.txt
 market/okex/datapsid.txt
 tradelog.txt
+market/bitmex_xbt/datapsid.txt
+market/bitmex_xbt/bitmexdeep.txt
+market/bitmex_xbt/datapsid.txt
+market/bitmex_xbt/log.txt
+market/bitmex_xbt/testtrade.txt
