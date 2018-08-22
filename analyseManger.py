@@ -817,12 +817,12 @@ class TradeTool(object):
                 return
             if len(self.bosubs) > 1:
                 self.closeBO(priceOBSellSub,closeAll = True)
-            elif abs(lastOBsub/stepprice) > 1.0:
+            elif abs(lastOBsub/stepprice) > 0.0:
                 c = abs((lastOBsub+2)/stepprice) - len(self.obsubs) - self.baseOB
                 self.tradecount = len(self.obsubs) + self.baseOB + 1
                 tmpprice = -(self.tradecount)*stepprice
                 if self.showLogCount == 0:
-                    tmpstr = 'last<0,sub:%.2f,%d,%.3f,%.d,s:%.2f,m:%.2f,%.2f'%(self.lastSub['ob']['subOB'],len(self.obsubs),c,self.baseOB,tmpprice + 2*stepprice + self.basePrice,tmpprice + self.basePrice,stepprice)
+                    tmpstr = 'last<0,sub:%.2f,%d,%.3f,%d,m:%.2f,s:%.2f,%.2f'%(self.lastSub['ob']['subOB'],len(self.obsubs),c,self.baseOB,tmpprice + 2*stepprice + self.basePrice,tmpprice + self.basePrice,stepprice)
                     # tmpstr = '\r' + tmpstr
                     if self.priceWinlog:
                         self.priceWinlog.insert(-2, tmpstr)
@@ -841,7 +841,8 @@ class TradeTool(object):
                 elif c < -1:
                     self.closeOB(priceOBBuySub)
             else:
-                print('other...')
+                print('other.1..')
+                
         elif lastOBsub > 0:
             maxprice = self.okexDatas[1][0]
             stepprice = maxprice * self.stepPercent
@@ -860,12 +861,12 @@ class TradeTool(object):
 
             if len(self.obsubs) > 1:
                 self.closeOB(priceOBBuySub,closeAll = True)
-            elif abs(lastOBsub/stepprice) > 1.0:
+            elif abs(lastOBsub/stepprice) > 0.0:
                 c =  abs((lastOBsub-2)/stepprice) - len(self.bosubs) - self.baseBO
                 self.tradecount = len(self.bosubs) + self.baseBO + 1
                 tmpprice = (self.tradecount)*stepprice
                 if self.showLogCount == 0:
-                    tmpstr = 'last<0,sub:%.2f,%d,%.3f,%.d,s:%.2f,m:%.2f,%.2f'%(self.lastSub['ob']['subOB'],len(self.bosubs),c,self.baseOB,tmpprice - 2*stepprice + self.basePrice,tmpprice + self.basePrice,stepprice)
+                    tmpstr = 'last>0,sub:%.2f,%d,%.3f,%d,m:%.2f,s:%.2f,%.2f'%(self.lastSub['ob']['subOB'],len(self.bosubs),c,self.baseOB,tmpprice + self.basePrice,tmpprice - 2*stepprice + self.basePrice,stepprice)
                     # print(tmpstr)
                     if self.priceWinlog:
                         self.priceWinlog.insert(-2, tmpstr)
@@ -884,7 +885,7 @@ class TradeTool(object):
                 elif c < -1:
                     self.closeBO(priceOBSellSub)
             else:
-                print('other...')
+                print('other.2..')
                 
 
 

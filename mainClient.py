@@ -90,13 +90,17 @@ class Servers(socketserver.StreamRequestHandler):
             data = data.decode()
             
             if data == 'openbo':
-                tradetool.openBO(subpurce = 31.1)
+                priceOBBuySub = tradetool.okexDatas[0][0] - tradetool.bitmexDatas[0][0] + 10
+                tradetool.openBO(subpurce = priceOBBuySub)
             elif data == 'openob':
-                tradetool.openOB(subpurce = 31.1)
+                priceOBSellSub = tradetool.okexDatas[1][0] - tradetool.bitmexDatas[1][0] - 10
+                tradetool.openOB(subpurce = priceOBSellSub)
             elif data == 'closebo':
-                tradetool.closeBO(subpurce = 31.1)
+                priceOBSellSub = tradetool.okexDatas[1][0] - tradetool.bitmexDatas[1][0] - 10
+                tradetool.closeBO(subpurce = priceOBSellSub)
             elif data == 'closeob':
-                tradetool.closeOB(subpurce = 31.1)
+                priceOBBuySub = tradetool.okexDatas[0][0] - tradetool.bitmexDatas[0][0] + 10
+                tradetool.closeOB(subpurce = priceOBBuySub)
             elif data == 'okexol':
                 msg = {'type':'ol','amount':tradetool.baseAmount,'price':1000.0,'islimit':1,'cid':'sssss'}
                 tradetool.sendMsgToOkexTrade('ol', msg)
