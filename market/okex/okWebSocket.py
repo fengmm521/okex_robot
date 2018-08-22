@@ -7,7 +7,10 @@ import zlib
 import hashlib
 import websocket
 import json
-import thread
+try:
+    import thread
+except ImportError:
+    import _thread as thread
 #okex
 #websocket只用来定阅数据推送，下单使用rest的https接口发送
 

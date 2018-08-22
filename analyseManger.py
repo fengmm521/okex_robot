@@ -41,6 +41,7 @@ def getSysType():
 saylist = []
 
 def sayMsg(msg):
+    return
     smsg = msg
     # print smsg
     if getSysType() == 'mac':
