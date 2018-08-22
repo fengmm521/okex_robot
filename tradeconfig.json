@@ -13,5 +13,5 @@
     "autoBase":0,
     "dalyPrice":6,
     "baseAmount":1,
-    "startDaly":0
+    "startDaly":-1
 }

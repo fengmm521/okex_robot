@@ -233,7 +233,13 @@ class TradeTool(object):
         self.initSocket()
 
     def setLogShow(self,isShowLog):
-        self.isShowLog = isShowLog
+
+        if isShowLog:
+            self.isShowLog = True
+            print('open log')
+        else:
+            self.isShowLog = False
+            print('close log')
 
     def initSocket(self):
         self.initOkexTradeSocket()
@@ -803,8 +809,10 @@ class TradeTool(object):
 
             if isStop:
                 showlogtmp = ' | '.join(self.priceWinlog)
+                showlogtmp = '\r' + showlogtmp
                 sys.stdout.writelines(showlogtmp)
                 sys.stdout.flush()
+                # print('ddd')
                 self.priceWinlog = []
                 return
             if len(self.bosubs) > 1:
@@ -838,8 +846,16 @@ class TradeTool(object):
             maxprice = self.okexDatas[1][0]
             stepprice = maxprice * self.stepPercent
             if self.isShowLog:
-                print('stepprice=%.2f,%d'%(stepprice,isStop))
+                # print('stepprice=%.2f,%d'%(stepprice,isStop))
+                tmplog2 = 'stepprice=%.2f,%d'%(stepprice,isStop)
+                self.priceWinlog.insert(-2,tmplog2)
             if isStop:
+                showlogtmp = ' | '.join(self.priceWinlog)
+                showlogtmp = '\r' + showlogtmp
+                sys.stdout.writelines(showlogtmp)
+                sys.stdout.flush()
+                # print('ddd')
+                self.priceWinlog = []
                 return
 
             if len(self.obsubs) > 1:
@@ -850,7 +866,18 @@ class TradeTool(object):
                 tmpprice = (self.tradecount)*stepprice
                 if self.showLogCount == 0:
                     tmpstr = 'last<0,sub:%.2f,%d,%.3f,%.d,s:%.2f,m:%.2f,%.2f'%(self.lastSub['ob']['subOB'],len(self.bosubs),c,self.baseOB,tmpprice - 2*stepprice + self.basePrice,tmpprice + self.basePrice,stepprice)
-                    print(tmpstr)
+                    # print(tmpstr)
+                    if self.priceWinlog:
+                        self.priceWinlog.insert(-2, tmpstr)
+                        tmpstr = '\r' + ' | '.join(self.priceWinlog)
+                    else:
+                        tmpstr = '\r' + tmpstr
+                    
+                    sys.stdout.writelines(tmpstr)
+                    # print('\r',str(10-i).ljust(10),end='') #python 3使用的方法
+                    # print('\r',tmpstr.ljust(100))
+                    sys.stdout.flush()
+                    self.priceWinlog = []
                 if c > 1.0:
                     opencount = math.floor(c)
                     self.openBO(priceOBBuySub)
