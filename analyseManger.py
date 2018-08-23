@@ -428,7 +428,7 @@ class TradeTool(object):
             # print('-'*20)
             if self.isShowLog:
                 # print('ob:',round(self.lastSub['ob']['subOB'],3),self.lastSub['ob']['odeep'],self.lastSub['ob']['bdeep'],'bo:',round(self.lastSub['bo']['subBO'],3),self.lastSub['bo']['odeep'],self.lastSub['bo']['bdeep'],self.lastSub['subtime'])
-                pricelog0 = 'ob:%f,%d,%d,bo:%f,%d,%d,%d'%(round(self.lastSub['ob']['subOB'],3),self.lastSub['ob']['odeep'],self.lastSub['ob']['bdeep'],round(self.lastSub['bo']['subBO'],3),self.lastSub['bo']['odeep'],self.lastSub['bo']['bdeep'],self.lastSub['subtime'])
+                pricelog0 = 'ob:%.2f,%d,%d,bo:%.2f,%d,%d,%d'%(round(self.lastSub['ob']['subOB'],3),self.lastSub['ob']['odeep'],self.lastSub['ob']['bdeep'],round(self.lastSub['bo']['subBO'],3),self.lastSub['bo']['odeep'],self.lastSub['bo']['bdeep'],self.lastSub['subtime'])
                 lenstrcount = len(pricelog0)
                 if lenstrcount > self.maxStrlen:
                     self.maxStrlen = lenstrcount
