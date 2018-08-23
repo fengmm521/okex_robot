@@ -1328,7 +1328,7 @@ class TradeTool(object):
             elif datadic['type'] == 'os':
                 if datadic['data']['result'] == False:
                     #'{"type":"trade","state":"erro","orderType":"%s","amount":%s,"price":%s}'%(outtype,amount,price)
-                    msg = {'type':'os','amount':ptype['amount'],'price':self.okexDatas[0][0]-5,'islimit':1,'cid':datadic['cid']}
+                    msg = {'type':'os','amount':datadic['data']['amount'],'price':self.okexDatas[0][0]-5,'islimit':1,'cid':datadic['cid']}
                     self.oCIDData[datadic['cid']] = {'msg':msg,'state':0,'cid':datadic['cid']}
                     if isSayOpen:
                         sayMsg('okex开空失败,1秒后重开空')
